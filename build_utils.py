@@ -48,23 +48,29 @@ def ensureCanBuildOnWindows():
     has_exe('hg')
 
 
-def makeZip(source, zipName):
+def makeZip(sources, zipName):
     zipFile = zipfile.ZipFile(zipName, 'w')
 
-    for root, dirs, files in os.walk(source):
-        for _file in files:
-            zipFile.write(os.path.join(root, _file))
+    for source in sources:
+        for root, dirs, files in os.walk(source):
+            for _file in files:
+                zipFile.write(os.path.join(root, _file))
 
     zipFile.close()
 
 
-def invokeCMake(sourceDir, generator):
-    cmakeCmd = ["cmake",
-                "-G", generator,
-                sourceDir]
+def invokeCMake(sourceDir, generator, extraParams=None):
+    if not extraParams:
+        extraParams = []
+
+    cmakeCmd = ["cmake", "-G", generator]
+    cmakeCmd.extend(extraParams)
+    cmakeCmd.extend([sourceDir])
+
     print "*** Invoking CMake '%s' ..." % cmakeCmd
     cmakeProc = subprocess.Popen(cmakeCmd).wait()
     print "*** CMake generation return code: ", cmakeProc
+    return cmakeProc
 
 
 def hgClone(url, target):
@@ -75,25 +81,3 @@ def hgClone(url, target):
 def generateMSBuildCommand(filename, configuration):
     return ["msbuild", filename, "/p:Configuration=" + configuration]
 
-
-def getMSVCCompiler(version):
-    return ('msvc' + str(version),
-            "Visual Studio " + (str(version) if version > 9 else '9 2008'),
-            list(chain.from_iterable(
-                # dftables is required to be built first to prevent any problems later on
-                (
-                    generateMSBuildCommand("src/pcre-8.12/CEGUI-BUILD/dftables." + ("vcxproj" if version > 9 else "vcproj"), config),
-                    generateMSBuildCommand("CEGUI-DEPS.sln", config)
-                ) for config in ["RelWithDebInfo", "Debug"])))
-
-
-def getCompilers():
-    return [
-        item for sublist in
-        [
-            #TODO: add RelWithDebInfo for mingw also ?
-            [('mingw', 'MinGW Makefiles', [['mingw32-make', 'dftables'], ['mingw32-make']])],
-            [getMSVCCompiler(x) for x in list(xrange(9, 13))]
-        ]
-        for item in sublist
-    ]
