@@ -93,7 +93,7 @@ class CEGUISDK:
         artifactZipName = artifactDirName + ".zip"
 
         dir_util.copy_tree(os.path.join(srcDir, "cegui/include"), "include")
-        build_utils.makeZip(["bin", "lib", "include"], artifactZipName)
+        build_utils.makeZip(["bin", "lib", "include"], artifactZipName, [".*\\.ilk"])
         shutil.copyfile(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
 
         print "*** Done gathering libraries for CEGUI."

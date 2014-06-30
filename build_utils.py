@@ -23,6 +23,7 @@ import os
 import subprocess
 import zipfile
 import shutil
+import re
 
 
 def setupPath(path, cleanExisting=True):
@@ -48,13 +49,22 @@ def ensureCanBuildOnWindows():
     has_exe('hg')
 
 
-def makeZip(sources, zipName):
+def makeZip(sources, zipName, patternsToIgnore=None):
+    if not patternsToIgnore:
+        patternsToIgnore = []
     zipFile = zipfile.ZipFile(zipName, 'w')
 
     for source in sources:
         for root, dirs, files in os.walk(source):
             for _file in files:
-                zipFile.write(os.path.join(root, _file))
+                skip = False
+                for pattern in patternsToIgnore:
+                    if re.match(pattern, _file):
+                        skip = True
+                        break
+
+                if not skip:
+                    zipFile.write(os.path.join(root, _file))
 
     zipFile.close()
 
