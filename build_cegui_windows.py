@@ -87,7 +87,7 @@ class CEGUISDK:
             print "*** ERROR: no 'bin' and 'lib' directory found, nothing generated?"
             return
 
-        artifactDirName = build_utils.generateCEGUISDKDirName(compiler)
+        artifactDirName = self.generateCEGUISDKDirName(compiler, self.branch)
         artifactZipName = artifactDirName + ".zip"
 
         dir_util.copy_tree(os.path.join(self.srcDir, "cegui/include"), "include")
@@ -111,6 +111,10 @@ class CEGUISDK:
             ]
             for item in sublist
         ]
+
+    def generateCEGUISDKDirName(self, compiler, branch):
+        return "cegui-sdk-%s-%s_%s-%s" %\
+               (compiler, time.strftime("%Y%m%d"), branch, build_utils.getHgRevision(self.srcDir))
 
 
 if __name__ == "__main__":

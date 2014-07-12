@@ -99,10 +99,6 @@ def generateCEGUIDependenciesDirName(compiler):
     return "cegui-dependencies-" + compiler
 
 
-def generateCEGUISDKDirName(compiler):
-    return "cegui-sdk-" + compiler
-
-
 def generateMSBuildCommand(filename, configuration):
     return ["msbuild", filename, "/p:Configuration=" + configuration]
 
