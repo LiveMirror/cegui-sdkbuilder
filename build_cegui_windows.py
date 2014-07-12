@@ -36,8 +36,7 @@ class CEGUISDK:
         self.args = args
         self.artifactsPath = args.artifacts_dir
         self.srcDir = os.path.join(self.args.temp_dir, "cegui")
-        if not os.path.exists(self.artifactsPath):
-            os.mkdir(self.artifactsPath)
+        build_utils.setupPath(self.artifactsPath, False)
         build_utils.setupPath(self.srcDir)
 
     def cloneRepo(self):
