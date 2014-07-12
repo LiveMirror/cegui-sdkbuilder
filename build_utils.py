@@ -34,7 +34,7 @@ def setupPath(path, cleanExisting=True):
 
     if not os.path.exists(path):
         print "*** Creating path '%s' ..." % path
-        os.mkdir(path)
+        os.makedirs(path)
 
 
 def ensureCanBuildOnWindows():

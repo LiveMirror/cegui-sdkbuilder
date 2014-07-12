@@ -123,7 +123,7 @@ class CEGUIDependenciesSDK:
 if __name__ == "__main__":
     build_utils.ensureCanBuildOnWindows()
 
-    currentPath = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    currentPath = os.getcwd()
 
     parser = argparse.ArgumentParser(description="Build CEGUI dependencies for Windows.")
     parser.add_argument("--url", default="https://bitbucket.org/cegui/cegui-dependencies",

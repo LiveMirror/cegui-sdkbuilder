@@ -38,7 +38,7 @@ class CEGUISDK:
         self.srcDir = os.path.join(self.args.temp_dir, "cegui")
         if not os.path.exists(self.artifactsPath):
             os.mkdir(self.artifactsPath)
-            build_utils.setupPath(self.srcDir)
+        build_utils.setupPath(self.srcDir)
 
     def cloneRepo(self):
         print "*** Cloning CEGUI repository ..."
@@ -117,7 +117,7 @@ class CEGUISDK:
 if __name__ == "__main__":
     build_utils.ensureCanBuildOnWindows()
 
-    currentPath = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    currentPath = os.getcwd()
 
     parser = argparse.ArgumentParser(description="Build CEGUI for Windows.")
     parser.add_argument("--url", default="https://bitbucket.org/cegui/cegui",
