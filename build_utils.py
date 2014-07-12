@@ -1,5 +1,5 @@
 ##############################################################################
-#   CEGUI Dependencies build script
+#   CEGUI SDK Builder build utils
 #
 #   Copyright (C) 2014        Timotei Dolean <timotei21@gmail.com>
 #                             and contributing authors (see AUTHORS file)
@@ -19,6 +19,7 @@
 ##############################################################################
 from distutils import spawn
 from itertools import chain
+import multiprocessing
 import os
 import subprocess
 import zipfile
@@ -88,6 +89,22 @@ def hgClone(url, target):
     subprocess.Popen(["hg", "clone", url, target]).wait()
 
 
+def getHgRevision(repoDir, length=6):
+    p = subprocess.Popen(["hg", "id", "-i", repoDir], stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    return out.rstrip()[:length]
+
+
+def generateCEGUIDependenciesDirName(compiler):
+    return "cegui-dependencies-" + compiler
+
+
 def generateMSBuildCommand(filename, configuration):
     return ["msbuild", filename, "/p:Configuration=" + configuration]
 
+
+def generateMingwMakeCommand(target=None):
+    command = ["mingw32-make", "-j", str(multiprocessing.cpu_count())]
+    if target is not None:
+        command.append(target)
+    return command
