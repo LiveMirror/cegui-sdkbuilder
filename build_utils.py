@@ -84,9 +84,12 @@ def invokeCMake(sourceDir, generator, extraParams=None):
     return cmakeProc
 
 
-def hgClone(url, target):
+def hgClone(url, target, branch="default"):
     print "*** Cloning from '%s' to '%s' ..." % (url, target)
     subprocess.Popen(["hg", "clone", url, target]).wait()
+
+    print "*** Switching to branch '%s' ..." % branch
+    subprocess.Popen(["hg", "update", "-C", branch]).wait()
 
 
 def getHgRevision(repoDir, length=6):

@@ -36,12 +36,13 @@ class CEGUISDK:
         self.args = args
         self.artifactsPath = args.artifacts_dir
         self.srcDir = os.path.join(self.args.temp_dir, "cegui")
+        self.branch = args.branch
         build_utils.setupPath(self.artifactsPath, False)
-        build_utils.setupPath(self.srcDir)
+        build_utils.setupPath(self.srcDir, not args.quick_mode)
 
     def cloneRepo(self):
         print "*** Cloning CEGUI repository ..."
-        build_utils.hgClone(self.args.url, self.srcDir)
+        build_utils.hgClone(self.args.url, self.srcDir, self.branch)
 
     def build(self):
         old_path = os.getcwd()
@@ -54,7 +55,7 @@ class CEGUISDK:
             compilerStartTime = time.time()
             print "\n*** Using '%s' compiler..." % compiler
             buildDir = os.path.join(self.srcDir, "build" + compiler)
-            build_utils.setupPath(buildDir)
+            build_utils.setupPath(buildDir, not self.args.quick_mode)
             os.chdir(buildDir)
 
             extraCMakeArgs = [
@@ -134,6 +135,9 @@ if __name__ == "__main__":
                              "named '%s', where X is a compiler: mingw or msvc9 through msvc12."
                              "The CEGUI SDK will be built only for compilers which have their dependencies built." %
                              build_utils.generateCEGUIDependenciesDirName('X'))
+    parser.add_argument("--branch", default="v0-8",
+                        help="Specifies which branch should be built")
+    parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
 
     parsedArgs = parser.parse_args()
     print "*** Using args: "
@@ -141,5 +145,6 @@ if __name__ == "__main__":
         print '     ', key, '=', value
 
     ceguiSDK = CEGUISDK(parsedArgs)
-    ceguiSDK.cloneRepo()
+    if not parsedArgs.quick_mode:
+        ceguiSDK.cloneRepo()
     ceguiSDK.build()

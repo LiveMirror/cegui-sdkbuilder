@@ -38,7 +38,7 @@ class CEGUIDependenciesSDK:
         self.artifactsPath = args.artifacts_dir
         self.srcDir = os.path.join(self.args.temp_dir, "cegui-dependencies")
         build_utils.setupPath(self.artifactsPath, False)
-        build_utils.setupPath(self.srcDir)
+        build_utils.setupPath(self.srcDir, not parsedArgs.quick_mode)
 
     def cloneRepo(self):
         print "*** Cloning dependencies repository ..."
@@ -58,7 +58,7 @@ class CEGUIDependenciesSDK:
             compilerStartTime = time.time()
             print "\n*** Using '%s' compiler..." % compiler
             buildDir = os.path.join(self.srcDir, "build" + compiler)
-            build_utils.setupPath(buildDir)
+            build_utils.setupPath(buildDir, not parsedArgs.quick_mode)
             os.chdir(buildDir)
 
             if build_utils.invokeCMake(self.srcDir, generator) != 0:
@@ -131,6 +131,7 @@ if __name__ == "__main__":
                         help="Temporary directory where to store intermediate output.")
     parser.add_argument("--artifacts-dir", default=os.path.join(currentPath, "artifacts"),
                         help="Directory where to store the final SDK artifacts")
+    parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
 
     parsedArgs = parser.parse_args()
     print "*** Using args: "
@@ -138,5 +139,6 @@ if __name__ == "__main__":
         print '     ', key, '=', value
 
     depsSDK = CEGUIDependenciesSDK(parsedArgs)
-    depsSDK.cloneRepo()
+    if not parsedArgs.quick_mode:
+        depsSDK.cloneRepo()
     depsSDK.build()
