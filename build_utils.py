@@ -89,7 +89,7 @@ def hgClone(url, target, branch="default"):
     subprocess.Popen(["hg", "clone", url, target]).wait()
 
     print "*** Switching to branch '%s' ..." % branch
-    subprocess.Popen(["hg", "update", "-C", branch]).wait()
+    subprocess.Popen(["hg", "update", "-C", branch], cwd=target).wait()
 
 
 def getHgRevision(repoDir, length=6):
