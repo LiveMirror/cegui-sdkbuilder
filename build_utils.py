@@ -86,10 +86,10 @@ def invokeCMake(sourceDir, generator, extraParams=None):
 
 def hgClone(url, target, branch="default"):
     print "*** Cloning from '%s' to '%s' ..." % (url, target)
-    subprocess.Popen(["hg", "clone", url, target]).wait()
+    assert(subprocess.Popen(["hg", "clone", url, target]).wait() == 0)
 
     print "*** Switching to branch '%s' ..." % branch
-    subprocess.Popen(["hg", "update", "-C", branch], cwd=target).wait()
+    assert(subprocess.Popen(["hg", "update", "-C", branch], cwd=target).wait() == 0)
 
 
 def getHgRevision(repoDir, length=6):
