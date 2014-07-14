@@ -95,18 +95,12 @@ class CEGUIDependenciesSDK:
     def getMSVCCompiler(version):
         return ('msvc' + str(version),
                 "Visual Studio " + (str(version) if version > 9 else '9 2008'),
-                list(chain.from_iterable(
-                    (
-                        # dftables is required to be built first to prevent any problems later on
-                        build_utils.generateMSBuildCommand(
-                            "src/pcre-8.12/CEGUI-BUILD/dftables." + ("vcxproj" if version > 9 else "vcproj"), config),
-                        build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config)
-                    ) for config in ["RelWithDebInfo", "Debug"])))
+                [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in ["RelWithDebInfo", "Debug"]])
 
     @staticmethod
     def getMingwCompiler():
         return ('mingw', 'MinGW Makefiles',
-                 [build_utils.generateMingwMakeCommand('dftables'), build_utils.generateMingwMakeCommand()])
+                [build_utils.generateMingwMakeCommand()])
 
     def getCompilers(self):
         return [
