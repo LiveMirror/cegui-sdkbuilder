@@ -18,119 +18,72 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
-import argparse
+from __future__ import print_function
+import collections
 from distutils import dir_util
-from itertools import chain
-import subprocess
 import shutil
 import os
 import time
-
 import build_utils
+from sdk_builder import SDKBuilder, BuildDetails, CMakeArgs
 
 
-#TODO:
-# - mingw debug build
-
-class CEGUIDependenciesSDK:
+class CEGUIDependenciesSDK(SDKBuilder):
     def __init__(self, args):
-        self.args = args
-        self.artifactsPath = args.artifacts_dir
-        self.srcDir = os.path.join(self.args.temp_dir, "cegui-dependencies")
-        build_utils.setupPath(self.artifactsPath, False)
-        build_utils.setupPath(self.srcDir, not parsedArgs.quick_mode)
+        SDKBuilder.__init__(self, args, "cegui-dependencies")
 
-    def cloneRepo(self):
-        print "*** Cloning dependencies repository ..."
-        build_utils.hgClone(self.args.url, self.srcDir)
+    def gatherArtifacts(self, compiler, builds):
+        print("*** Gathering artifacts for CEGUI dependencies for '%s' compiler ..." % compiler)
 
-    def build(self):
-        self.buildCEGUIDeps()
-
-    def buildCEGUIDeps(self):
-        old_path = os.getcwd()
-        os.chdir(self.srcDir)
-
-        depsStartTime = time.time()
-        print "*** Building CEGUI dependencies ..."
-
-        for (compiler, generator, commands) in self.getCompilers():
-            compilerStartTime = time.time()
-            print "\n*** Using '%s' compiler..." % compiler
-            buildDir = os.path.join(self.srcDir, "build" + compiler)
-            build_utils.setupPath(buildDir, not parsedArgs.quick_mode)
-            os.chdir(buildDir)
-
-            if build_utils.invokeCMake(self.srcDir, generator) != 0:
-                print "*** Error configuring CMake for ", compiler, "skipping ..."
-                continue
-
-            for command in commands:
-                print "*** Executing compiler command: ", command
-                subprocess.Popen(command).wait()
-
-            print "*** Compilation using '%s' took %f minutes." % (compiler, (time.time() - compilerStartTime) / 60.0)
-            self.gatherDeps(compiler)
-
-        print "*** CEGUI Dependencies total build time: ", (time.time() - depsStartTime) / 60.0, "minutes."
-        os.chdir(old_path)
-
-    def gatherDeps(self, compiler):
-        print "*** Gathering artifacts for CEGUI dependencies for '%s' compiler ..." % compiler
-        if not os.path.isdir("dependencies"):
-            print "*** ERROR: no dependencies directory found, nothing generated?"
-            return
-
-        artifactDirName = build_utils.generateCEGUIDependenciesDirName(compiler)
+        artifactDirName = build_utils.generateCEGUIDependenciesDirName(builds[0].friendlyName)
         artifactZipName = "%s-%s-%s.zip" % (
             artifactDirName, time.strftime("%Y%m%d"), build_utils.getHgRevision(self.srcDir))
+        depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
-        dir_util.copy_tree("dependencies", os.path.join(self.artifactsPath, artifactDirName))
-        build_utils.makeZip(["dependencies"], artifactZipName, [".*\\.ilk"])
-        shutil.copyfile(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
+        for build in builds:
+            depsPath = os.path.join(self.srcDir, build.buildDir, "dependencies")
+            print("*** From ", depsPath, " to", depsGatherPath, "...")
+            if not os.path.isdir(depsPath):
+                print("*** ERROR: no dependencies directory found, nothing will be generated!")
+                return
 
-        print "*** Done gathering artifacts for CEGUI dependencies."
+            dir_util.copy_tree(depsPath, depsGatherPath)
 
-    @staticmethod
-    def getMSVCCompiler(version):
-        return ('msvc' + str(version),
-                "Visual Studio " + (str(version) if version > 9 else '9 2008'),
-                [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in ["RelWithDebInfo", "Debug"]])
+        os.chdir(self.artifactsUnarchivedPath)
+        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk"])
+        shutil.move(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
 
-    @staticmethod
-    def getMingwCompiler():
-        return ('mingw', 'MinGW Makefiles',
-                [build_utils.generateMingwMakeCommand()])
+        print("*** Done gathering artifacts for CEGUI dependencies.")
 
-    def getCompilers(self):
-        return [
-            item for sublist in
-            [
-                [self.getMingwCompiler()],
-                [self.getMSVCCompiler(x) for x in list(xrange(9, 13))]
-            ]
-            for item in sublist
-        ]
+    def createSDKBuilds(self):
+        builds = collections.defaultdict(list)
+        configs = ["Debug", "RelWithDebInfo"]
+        for config in configs:
+            builds["mingw"].append(BuildDetails
+                                   ("mingw", "mingw", "build-mingw-" + config,
+                                    CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config]),
+                                    [build_utils.generateMingwMakeCommand()]))
 
+        msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
+        for version, friendlyName in msvcCompilers:
+            msvc = "msvc" + str(version)
+            builds[msvc].append(BuildDetails
+                                (msvc, friendlyName, "build-" + msvc,
+                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), None),
+                                 [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in configs]))
+
+        return builds
 
 if __name__ == "__main__":
     build_utils.ensureCanBuildOnWindows()
-
     currentPath = os.getcwd()
 
-    parser = argparse.ArgumentParser(description="Build CEGUI dependencies for Windows.")
-    parser.add_argument("--url", default="https://bitbucket.org/cegui/cegui-dependencies",
-                        help="URL or path to the mercurial dependencies repository.")
-    parser.add_argument("--temp-dir", default=os.path.join(currentPath, "local-temp"),
-                        help="Temporary directory where to store intermediate output.")
-    parser.add_argument("--artifacts-dir", default=os.path.join(currentPath, "artifacts"),
-                        help="Directory where to store the final SDK artifacts")
-    parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
-
+    parser = SDKBuilder.getDefaultArgParse("cegui-dependencies")
     parsedArgs = parser.parse_args()
-    print "*** Using args: "
+
+    print("*** Using args: ")
     for key, value in vars(parsedArgs).iteritems():
-        print '     ', key, '=', value
+        print('     ', key, '=', value)
 
     depsSDK = CEGUIDependenciesSDK(parsedArgs)
     if not parsedArgs.quick_mode:

@@ -76,7 +76,7 @@ def invokeCMake(sourceDir, generator, extraParams=None):
 
     cmakeCmd = ["cmake", "-G", generator]
     cmakeCmd.extend(extraParams)
-    cmakeCmd.extend([sourceDir])
+    cmakeCmd.append(sourceDir)
 
     print "*** Invoking CMake '%s' ..." % cmakeCmd
     cmakeProc = subprocess.Popen(cmakeCmd).wait()
@@ -103,7 +103,7 @@ def generateCEGUIDependenciesDirName(compiler):
 
 
 def generateMSBuildCommand(filename, configuration):
-    return ["msbuild", filename, "/p:Configuration=" + configuration]
+    return ["msbuild", filename, "/p:Configuration=" + configuration, "/maxcpucount"]
 
 
 def generateMingwMakeCommand(target=None):
