@@ -17,8 +17,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
+from __future__ import print_function
 from distutils import spawn
-from itertools import chain
 import multiprocessing
 import os
 import subprocess
@@ -29,18 +29,18 @@ import re
 
 def setupPath(path, cleanExisting=True):
     if cleanExisting and os.path.isdir(path):
-        print "*** Cleaning up '%s' ... " % path
+        print("*** Cleaning up '%s' ... " % path)
         shutil.rmtree(path)
 
     if not os.path.exists(path):
-        print "*** Creating path '%s' ..." % path
+        print("*** Creating path '%s' ..." % path)
         os.makedirs(path)
 
 
 def ensureCanBuildOnWindows():
     def has_exe(name):
         if spawn.find_executable(name) is None:
-            print "No program named '%s' could be found on PATH! Aborting... " % name
+            print("No program named '%s' could be found on PATH! Aborting... " % name)
             exit(1)
         return True
 
@@ -54,6 +54,7 @@ def makeZip(sources, zipName, patternsToIgnore=None):
     if not patternsToIgnore:
         patternsToIgnore = []
     zipFile = zipfile.ZipFile(zipName, 'w')
+    print("*** Creating zip archive in", zipName, " with sources ", sources, "...")
 
     for source in sources:
         for root, dirs, files in os.walk(source):
@@ -78,17 +79,17 @@ def invokeCMake(sourceDir, generator, extraParams=None):
     cmakeCmd.extend(extraParams)
     cmakeCmd.append(sourceDir)
 
-    print "*** Invoking CMake '%s' ..." % cmakeCmd
+    print("*** Invoking CMake '%s' ..." % cmakeCmd)
     cmakeProc = subprocess.Popen(cmakeCmd).wait()
-    print "*** CMake generation return code: ", cmakeProc
+    print("*** CMake generation return code: ", cmakeProc)
     return cmakeProc
 
 
 def hgClone(url, target, branch="default"):
-    print "*** Cloning from '%s' to '%s' ..." % (url, target)
+    print("*** Cloning from '%s' to '%s' ..." % (url, target))
     assert(subprocess.Popen(["hg", "clone", url, target]).wait() == 0)
 
-    print "*** Switching to branch '%s' ..." % branch
+    print("*** Switching to branch '%s' ..." % branch)
     assert(subprocess.Popen(["hg", "update", "-C", branch], cwd=target).wait() == 0)
 
 

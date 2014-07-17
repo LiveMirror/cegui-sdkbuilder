@@ -66,7 +66,7 @@ class SDKBuilder:
         os.chdir(self.srcDir)
 
         depsStartTime = time.time()
-        print("*** Building ", self.sdkName, ". Current date: ", time.strftime("%c"), "...")
+        print("*** Building ", self.sdkName, "| Current date: ", time.strftime("%c"), "...")
 
         for compiler, builds in self.builds.iteritems():
             compilerStartTime = time.time()
