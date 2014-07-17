@@ -29,7 +29,7 @@ import build_utils
 
 # TODO:
 # - mingw debug build
-
+#- TODO: start hour/date + message
 
 class CEGUISDK:
     def __init__(self, args):
@@ -79,7 +79,7 @@ class CEGUISDK:
             print "*** Compilation using '%s' took %f minutes." % (compiler, (time.time() - compilerStartTime) / 60.0)
             self.gatherLibs(compiler)
 
-        print "*** CEGUI Dependencies total build time: ", (time.time() - depsStartTime / 60.0), "minutes."
+        print "*** CEGUI Dependencies total build time: ", ((time.time() - depsStartTime) / 60.0), "minutes."
         os.chdir(old_path)
 
     def gatherLibs(self, compiler):
