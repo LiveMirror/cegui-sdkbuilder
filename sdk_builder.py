@@ -21,10 +21,13 @@ from __future__ import print_function
 from abc import ABCMeta
 import abc
 import argparse
+import json
 import os
 import subprocess
 import time
 import build_utils
+
+CONFIG_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json")
 
 
 class CMakeArgs:
@@ -46,27 +49,36 @@ class SDKBuilder:
     __metaclass__ = ABCMeta
 
     def __init__(self, args, sdkName):
+        print("*** Builder for", sdkName, "| Current date: ", time.strftime("%c"))
+
+        self.config = self.loadConfig()
         self.sdkName = sdkName
         self.args = args
         self.srcDir = os.path.join(self.args.temp_dir, sdkName)
         self.artifactsPath = args.artifacts_dir
         self.artifactsUnarchivedPath = args.artifacts_unarchived_dir
         self.builds = self.createSDKBuilds()
+        self.branch = args.branch
 
         build_utils.setupPath(self.artifactsPath, False)
         build_utils.setupPath(self.artifactsUnarchivedPath, False)
         build_utils.setupPath(self.srcDir, not args.quick_mode)
 
-    def cloneRepo(self, branch="default"):
-        print("*** Cloning ", self.sdkName, "repository...")
-        build_utils.hgClone(self.args.url, self.srcDir, branch)
+    def cloneRepo(self):
+        print("*** Cloning", self.sdkName, "repository...")
+        build_utils.hgClone(self.args.url, self.srcDir, self.branch)
 
     def build(self):
+        currentRevision = build_utils.getHgRevision(self.srcDir)
+        if self.config.get(self.getLatestRevisionKey()) == currentRevision and not self.args.force_build:
+            print("*** Skipping build, already built revision ", currentRevision)
+            return
+
         old_path = os.getcwd()
         os.chdir(self.srcDir)
 
         depsStartTime = time.time()
-        print("*** Building ", self.sdkName, "| Current date: ", time.strftime("%c"), "...")
+        print("*** Building ...")
 
         for compiler, builds in self.builds.iteritems():
             compilerStartTime = time.time()
@@ -78,18 +90,20 @@ class SDKBuilder:
                 os.chdir(buildDir)
 
                 if build_utils.invokeCMake(self.srcDir, build.cmakeArgs.generator, build.cmakeArgs.extraArgs) != 0:
-                    print("*** Error configuring CMake for ", compiler, "skipping ...")
+                    print("*** Error configuring CMake for", compiler, "skipping ...")
                     continue
 
                 for command in build.buildCommands:
-                    print("*** Executing compiler command: ", command)
+                    print("*** Executing compiler command:", command)
                     subprocess.Popen(command).wait()
 
                 print("*** Compilation using '%s' took %f minutes." % (compiler, self.minsUntilNow(compilerStartTime)))
 
             self.gatherArtifacts(compiler, builds)
 
-        print("*** ", self.sdkName, " total build time: ", self.minsUntilNow(depsStartTime), "minutes.")
+        self.config[self.getLatestRevisionKey()] = currentRevision
+        self.saveConfig()
+        print("***", self.sdkName, " total build time:", self.minsUntilNow(depsStartTime), "minutes.")
         os.chdir(old_path)
 
     @staticmethod
@@ -118,6 +132,25 @@ class SDKBuilder:
         parser.add_argument("--artifacts-unarchived-dir",
                             default=os.path.join(currentPath, "artifacts", "unarchived"),
                             help="Directory where to store the final unarchived artifacts")
+        parser.add_argument("--branch", default="v0-8",
+                            help="Specifies which branch should be built.")
+        parser.add_argument("--force-build", "-f", action="store_true",
+                            help="Forces building even if the current revision was already built for the specified branch.")
         parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
 
         return parser
+
+    def saveConfig(self):
+        with open(CONFIG_PATH, 'w') as f:
+            json.dump(self.config, f)
+
+    def getLatestRevisionKey(self):
+        return 'lastBuiltRevision-%s-%s' % (self.branch, self.sdkName)
+
+    @staticmethod
+    def loadConfig():
+        try:
+            with open(CONFIG_PATH, 'r') as f:
+                return json.load(f)
+        except:
+            return {}

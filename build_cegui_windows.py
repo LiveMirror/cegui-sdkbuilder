@@ -31,7 +31,6 @@ from sdk_builder import BuildDetails, CMakeArgs, SDKBuilder
 class CEGUISDK(SDKBuilder):
     def __init__(self, args):
         SDKBuilder.__init__(self, args, "cegui")
-        self.branch = args.branch
 
     def gatherArtifacts(self, compiler, builds):
         print("*** Gathering artifacts of CEGUI for '%s' compiler ..." % compiler)
@@ -111,8 +110,6 @@ if __name__ == "__main__":
                              "named '%s', where X is a compiler: mingw, msvc2008, msvc2010 or msvc2012."
                              "The CEGUI SDK will be built only for compilers which have their dependencies built." %
                              build_utils.generateCEGUIDependenciesDirName('X'))
-    parser.add_argument("--branch", default="v0-8",
-                        help="Specifies which branch should be built.")
 
     parsedArgs = parser.parse_args()
     print("*** Using args: ")
@@ -121,5 +118,5 @@ if __name__ == "__main__":
 
     ceguiSDK = CEGUISDK(parsedArgs)
     if not parsedArgs.quick_mode:
-        ceguiSDK.cloneRepo(parsedArgs.branch)
+        ceguiSDK.cloneRepo()
     ceguiSDK.build()
