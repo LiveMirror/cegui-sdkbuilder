@@ -57,7 +57,7 @@ class SDKBuilder:
         build_utils.setupPath(self.artifactsUnarchivedPath, False)
         build_utils.setupPath(self.srcDir, not args.quick_mode)
 
-    def cloneRepo(self, branch=None):
+    def cloneRepo(self, branch="default"):
         print("*** Cloning ", self.sdkName, "repository...")
         build_utils.hgClone(self.args.url, self.srcDir, branch)
 
