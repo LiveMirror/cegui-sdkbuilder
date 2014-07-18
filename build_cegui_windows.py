@@ -71,22 +71,32 @@ class CEGUISDK(SDKBuilder):
         return "cegui-sdk-%s-%s_%s-%s" %\
                (friendlyName, time.strftime("%Y%m%d"), branch, build_utils.getHgRevision(self.srcDir))
 
+    def getDefaultCMakeArgs(self, compiler):
+        args = ["-DCMAKE_PREFIX_PATH=" +
+                os.path.join(self.args.dependencies_dir, build_utils.generateCEGUIDependenciesDirName(compiler)),
+                "-DCEGUI_SAMPLES_ENABLED=FALSE",
+                "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
+                "-DCEGUI_BUILD_LUA_MODULE=FALSE",
+                "-DCEGUI_BUILD_TESTS=FALSE"]
+
+        buildPython = False
+        if self.args.boost_include_dir is not None and self.args.boost_library_dir is not None:
+            args.extend(["-DBoost_INCLUDE_DIR=" + self.args.boost_include_dir,
+                         "-DBoost_LIBRARY_DIR=" + self.args.boost_library_dir])
+            buildPython = True
+
+        args.append("-DCEGUI_BUILD_PYTHON_MODULES=" + ("TRUE" if buildPython and compiler == "msvc2008" else "FALSE"))
+
+        return args
+
     def createSDKBuilds(self):
         builds = collections.defaultdict(list)
         configs = ["Debug", "RelWithDebInfo"]
 
-        def getDefaultCMakeArgs(compiler):
-            return ["-DCMAKE_PREFIX_PATH=" +
-                    os.path.join(self.args.dependencies_dir, build_utils.generateCEGUIDependenciesDirName(compiler)),
-                    "-DCEGUI_SAMPLES_ENABLED=FALSE",
-                    "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
-                    "-DCEGUI_BUILD_LUA_MODULE=FALSE",
-                    "-DCEGUI_BUILD_PYTHON_MODULES=FALSE",
-                    "-DCEGUI_BUILD_TESTS=FALSE"]
 
         for config in configs:
             cmakeArgs = ["-DCMAKE_BUILD_TYPE=" + config]
-            cmakeArgs.extend(getDefaultCMakeArgs("mingw"))
+            cmakeArgs.extend(self.getDefaultCMakeArgs("mingw"))
             builds["mingw"].append(BuildDetails
                                    ("mingw", "mingw", "build-mingw-" + config,
                                     CMakeArgs("MinGW Makefiles", cmakeArgs),
@@ -96,7 +106,7 @@ class CEGUISDK(SDKBuilder):
             msvc = "msvc" + str(version)
             builds[msvc].append(BuildDetails
                                 (msvc, friendlyName, "build-" + msvc,
-                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), getDefaultCMakeArgs(friendlyName)),
+                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), self.getDefaultCMakeArgs(friendlyName)),
                                  [build_utils.generateMSBuildCommand("cegui.sln", config) for config in configs]))
         return builds
 
@@ -110,6 +120,10 @@ if __name__ == "__main__":
                              "named '%s', where X is a compiler: mingw, msvc2008, msvc2010 or msvc2012."
                              "The CEGUI SDK will be built only for compilers which have their dependencies built." %
                              build_utils.generateCEGUIDependenciesDirName('X'))
+    parser.add_argument("--boost-include-dir", default=None,
+                        help="Boost include dir")
+    parser.add_argument("--boost-library-dir", default=None,
+                        help="Boost library dir")
 
     parsedArgs = parser.parse_args()
     print("*** Using args: ")
