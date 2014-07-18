@@ -121,5 +121,5 @@ if __name__ == "__main__":
 
     ceguiSDK = CEGUISDK(parsedArgs)
     if not parsedArgs.quick_mode:
-        ceguiSDK.cloneRepo()
+        ceguiSDK.cloneRepo(parsedArgs.branch)
     ceguiSDK.build()
