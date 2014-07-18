@@ -92,13 +92,13 @@ class CEGUISDK(SDKBuilder):
                                    ("mingw", "mingw", "build-mingw-" + config,
                                     CMakeArgs("MinGW Makefiles", cmakeArgs),
                                     [build_utils.generateMingwMakeCommand()]))
-        # msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
-        # for version, friendlyName in msvcCompilers:
-        #     msvc = "msvc" + str(version)
-        #     builds[msvc].append(BuildDetails
-        #                         (msvc, friendlyName, "build-" + msvc,
-        #                          CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), getDefaultCMakeArgs(friendlyName)),
-        #                          [build_utils.generateMSBuildCommand("cegui.sln", config) for config in configs]))
+        msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
+        for version, friendlyName in msvcCompilers:
+            msvc = "msvc" + str(version)
+            builds[msvc].append(BuildDetails
+                                (msvc, friendlyName, "build-" + msvc,
+                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), getDefaultCMakeArgs(friendlyName)),
+                                 [build_utils.generateMSBuildCommand("cegui.sln", config) for config in configs]))
         return builds
 
 if __name__ == "__main__":
