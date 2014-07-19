@@ -49,7 +49,6 @@ class SDKBuilder:
     def __init__(self, args, sdkName):
         print("*** Builder for", sdkName, "| Current date: ", time.strftime("%c"))
 
-        self.config = self.loadConfig()
         self.sdkName = sdkName
         self.args = args
         self.srcDir = os.path.join(self.args.temp_dir, sdkName)
@@ -57,6 +56,7 @@ class SDKBuilder:
         self.artifactsUnarchivedPath = args.artifacts_unarchived_dir
         self.builds = self.createSDKBuilds()
         self.branch = args.branch
+        self.config = self.loadConfig()
 
         build_utils.setupPath(self.artifactsPath, False)
         build_utils.setupPath(self.artifactsUnarchivedPath, False)
