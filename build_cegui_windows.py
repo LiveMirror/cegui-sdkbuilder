@@ -93,7 +93,6 @@ class CEGUISDK(SDKBuilder):
         builds = collections.defaultdict(list)
         configs = ["Debug", "RelWithDebInfo"]
 
-
         for config in configs:
             cmakeArgs = ["-DCMAKE_BUILD_TYPE=" + config]
             cmakeArgs.extend(self.getDefaultCMakeArgs("mingw"))

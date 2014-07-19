@@ -27,8 +27,6 @@ import subprocess
 import time
 import build_utils
 
-CONFIG_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json")
-
 
 class CMakeArgs:
     def __init__(self, generator, extraArgs):
@@ -123,6 +121,8 @@ class SDKBuilder:
         currentPath = os.getcwd()
 
         parser = argparse.ArgumentParser(description="Build " + sdkName + " for Windows.")
+        parser.add_argument("--config-file", default=os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json"),
+                            help="Path where to store the configuration file for the builder script.")
         parser.add_argument("--url", default="https://bitbucket.org/cegui/" + sdkName,
                             help="URL or path to the mercurial " + sdkName + " repository where the.")
         parser.add_argument("--temp-dir", default=os.path.join(currentPath, "local-temp"),
@@ -141,16 +141,15 @@ class SDKBuilder:
         return parser
 
     def saveConfig(self):
-        with open(CONFIG_PATH, 'w') as f:
+        with open(self.args.config_file, 'w') as f:
             json.dump(self.config, f)
 
     def getLatestRevisionKey(self):
         return 'lastBuiltRevision-%s-%s' % (self.branch, self.sdkName)
 
-    @staticmethod
-    def loadConfig():
+    def loadConfig(self):
         try:
-            with open(CONFIG_PATH, 'r') as f:
+            with open(self.args.config_file, 'r') as f:
                 return json.load(f)
         except:
             return {}
