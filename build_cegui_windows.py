@@ -62,7 +62,7 @@ class CEGUISDK(SDKBuilder):
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
-        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk"])
+        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk", "PyCEGUI.*\\.pdb"])
         shutil.move(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
 
         print("*** Done gathering artifacts for CEGUI.")
