@@ -152,4 +152,7 @@ class SDKBuilder:
             with open(self.args.config_file, 'r') as f:
                 return json.load(f)
         except:
+            print("*** No config file found at ", self.args.config_file, ". Creating a default one...")
+            with open(self.args.config_file, 'w') as f:
+                json.dump({}, f)
             return {}
