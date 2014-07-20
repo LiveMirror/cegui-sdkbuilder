@@ -62,7 +62,11 @@ class CEGUISDK(SDKBuilder):
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
-        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk", "PyCEGUI.*\\.pdb"])
+        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk", "PyCEGUI.*"])
+        if compiler == "msvc9":
+            artifactWithPyCEGUIZipName = "cegui-sdk-%s-%s-%s-%s-pycegui.zip" % \
+                                         (friendlyName, time.strftime("%Y%m%d"), self.branch, build_utils.getHgRevision(self.srcDir))
+            build_utils.makeZip([artifactDirName], artifactWithPyCEGUIZipName, [".*\\.ilk", "PyCEGUI.*\\.pdb"])
         shutil.move(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
 
         print("*** Done gathering artifacts for CEGUI.")
