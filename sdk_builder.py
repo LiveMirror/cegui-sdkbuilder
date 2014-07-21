@@ -132,8 +132,8 @@ class SDKBuilder:
         parser.add_argument("--artifacts-unarchived-dir",
                             default=os.path.join(currentPath, "artifacts", "unarchived"),
                             help="Directory where to store the final unarchived artifacts")
-        parser.add_argument("--branch", default="v0-8",
-                            help="Specifies which branch should be built.")
+        parser.add_argument("--revision", default="v0-8",
+                            help="Specifies which revision (branch) should be built.")
         parser.add_argument("--force-build", "-f", action="store_true",
                             help="Forces building even if the current revision was already built for the specified branch.")
         parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
