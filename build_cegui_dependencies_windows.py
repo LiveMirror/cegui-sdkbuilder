@@ -80,10 +80,10 @@ if __name__ == "__main__":
 
     parser = SDKBuilder.getDefaultArgParse("cegui-dependencies")
     parsedArgs = parser.parse_args()
-    # we don't have separate branches for deps (yet)
-    if parsedArgs.branch != "default":
-        print("*** Overwriting selected branch with 'default' for dependencies ...")
-    parsedArgs.branch = "default"
+    # we don't have separate revisiones for deps (yet)
+    if parsedArgs.revision != "default":
+        print("*** Overwriting selected revision with 'default' for dependencies ...")
+    parsedArgs.revision = "default"
 
     print("*** Using args: ")
     for key, value in vars(parsedArgs).iteritems():

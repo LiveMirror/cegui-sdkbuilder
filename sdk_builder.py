@@ -55,7 +55,7 @@ class SDKBuilder:
         self.artifactsPath = args.artifacts_dir
         self.artifactsUnarchivedPath = args.artifacts_unarchived_dir
         self.builds = self.createSDKBuilds()
-        self.branch = args.branch
+        self.revision = args.revision
         self.config = self.loadConfig()
 
         build_utils.setupPath(self.artifactsPath, False)
@@ -64,7 +64,7 @@ class SDKBuilder:
 
     def cloneRepo(self):
         print("*** Cloning", self.sdkName, "repository...")
-        build_utils.hgClone(self.args.url, self.srcDir, self.branch)
+        build_utils.hgClone(self.args.url, self.srcDir, self.revision)
 
     def build(self):
         currentRevision = build_utils.getHgRevision(self.srcDir)
@@ -135,7 +135,7 @@ class SDKBuilder:
         parser.add_argument("--revision", default="v0-8",
                             help="Specifies which revision (branch) should be built.")
         parser.add_argument("--force-build", "-f", action="store_true",
-                            help="Forces building even if the current revision was already built for the specified branch.")
+                            help="Forces building even if the current revision was already built for the specified revision.")
         parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
 
         return parser
@@ -145,7 +145,7 @@ class SDKBuilder:
             json.dump(self.config, f)
 
     def getLatestRevisionKey(self):
-        return 'lastBuiltRevision-%s-%s' % (self.branch, self.sdkName)
+        return 'lastBuiltRevision-%s-%s' % (self.revision, self.sdkName)
 
     def loadConfig(self):
         try:
