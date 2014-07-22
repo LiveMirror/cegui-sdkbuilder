@@ -36,9 +36,9 @@ class CEGUISDK(SDKBuilder):
         print("*** Gathering artifacts of CEGUI for '%s' compiler ..." % compiler)
 
         friendlyName = builds[0].friendlyName
+        artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (friendlyName, time.strftime("%Y%m%d"), self.revision,
+                                                           build_utils.getHgRevision(self.srcDir))
         artifactDirName = "cegui-sdk-%s-%s" % (friendlyName, self.revision)
-        artifactZipName = "cegui-sdk-%s-%s-%s-%s.zip" % \
-                          (friendlyName, time.strftime("%Y%m%d"), self.revision, build_utils.getHgRevision(self.srcDir))
 
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
@@ -62,11 +62,13 @@ class CEGUISDK(SDKBuilder):
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
-        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk", "PyCEGUI.*"])
         if compiler == "msvc9":
-            artifactWithPyCEGUIZipName = "cegui-sdk-%s-%s-%s-%s-pycegui.zip" % \
-                                         (friendlyName, time.strftime("%Y%m%d"), self.revision, build_utils.getHgRevision(self.srcDir))
+            artifactWithPyCEGUIZipName = artifactZipNamePrefix + "-pycegui.zip"
             build_utils.makeZip([artifactDirName], artifactWithPyCEGUIZipName, [".*\\.ilk", "PyCEGUI.*\\.pdb"])
+            shutil.move(artifactWithPyCEGUIZipName, os.path.join(self.artifactsPath, artifactWithPyCEGUIZipName))
+
+        artifactZipName = artifactZipNamePrefix + ".zip"
+        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk", "PyCEGUI.*"])
         shutil.move(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
 
         print("*** Done gathering artifacts for CEGUI.")
