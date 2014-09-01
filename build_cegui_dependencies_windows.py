@@ -40,6 +40,7 @@ class CEGUIDependenciesSDK(SDKBuilder):
             artifactDirName, time.strftime("%Y%m%d"), build_utils.getHgRevision(self.srcDir))
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
+        #TODO: skip STATIC libs
         for build in builds:
             depsPath = os.path.join(self.srcDir, build.buildDir, "dependencies")
             print("*** From ", depsPath, " to", depsGatherPath, "...")
@@ -64,6 +65,7 @@ class CEGUIDependenciesSDK(SDKBuilder):
                                     CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config]),
                                     [build_utils.generateMingwMakeCommand()]))
 
+        #TODO: build more stuff
         msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
         for version, friendlyName in msvcCompilers:
             msvc = "msvc" + str(version)

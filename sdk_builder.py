@@ -27,6 +27,10 @@ import subprocess
 import time
 import build_utils
 
+#TODO: rename compiler to toolchain?
+#TODO: doxygen docs, README, COPYING, AUTHORS, etc
+#TODO: datafiles
+#TODO: samples
 
 class CMakeArgs:
     def __init__(self, generator, extraArgs):

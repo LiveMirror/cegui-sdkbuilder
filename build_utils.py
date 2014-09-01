@@ -49,7 +49,7 @@ def ensureCanBuildOnWindows():
     has_exe('mingw32-make')
     has_exe('hg')
 
-
+#TODO: add deflate compression
 def makeZip(sources, zipName, patternsToIgnore=None):
     if not patternsToIgnore:
         patternsToIgnore = []

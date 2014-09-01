@@ -27,7 +27,8 @@ import time
 import build_utils
 from sdk_builder import BuildDetails, CMakeArgs, SDKBuilder
 
-
+#TODO: pack deps also in the cegui SDK
+#TODO: pack boost python in PyCEGUI build
 class CEGUISDK(SDKBuilder):
     def __init__(self, args):
         SDKBuilder.__init__(self, args, "cegui")
