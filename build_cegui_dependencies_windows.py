@@ -58,20 +58,23 @@ class CEGUIDependenciesSDK(SDKBuilder):
 
     def createSDKBuilds(self):
         builds = collections.defaultdict(list)
+        extraCMakeArgs = []
+        for extraLib in ['CORONA', 'DEVIL', 'FREEIMAGE', 'LUA', 'TINYXML', 'XERCES']:
+            extraCMakeArgs.append("-DCEGUI_BUILD_%s=YES" % extraLib)
+
         configs = ["Debug", "RelWithDebInfo"]
         for config in configs:
             builds["mingw"].append(BuildDetails
                                    ("mingw", "mingw", "build-mingw-" + config,
-                                    CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config]),
+                                    CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config] + extraCMakeArgs),
                                     [build_utils.generateMingwMakeCommand()]))
 
-        #TODO: build more stuff
         msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
         for version, friendlyName in msvcCompilers:
             msvc = "msvc" + str(version)
             builds[msvc].append(BuildDetails
                                 (msvc, friendlyName, "build-" + msvc,
-                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), None),
+                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), extraCMakeArgs),
                                  [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in configs]))
 
         return builds
@@ -82,7 +85,7 @@ if __name__ == "__main__":
 
     parser = SDKBuilder.getDefaultArgParse("cegui-dependencies")
     parsedArgs = parser.parse_args()
-    # we don't have separate revisiones for deps (yet)
+    # we don't have separate revisions for deps (yet)
     if parsedArgs.revision != "default":
         print("*** Overwriting selected revision with 'default' for dependencies ...")
     parsedArgs.revision = "default"
