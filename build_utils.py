@@ -49,12 +49,12 @@ def ensureCanBuildOnWindows():
     has_exe('mingw32-make')
     has_exe('hg')
 
-#TODO: add deflate compression
+
 def makeZip(sources, zipName, patternsToIgnore=None):
     if not patternsToIgnore:
         patternsToIgnore = []
-    zipFile = zipfile.ZipFile(zipName, 'w')
-    print("*** Creating zip archive in", zipName, " with sources ", sources, "...")
+    zipFile = zipfile.ZipFile(zipName, 'w', zipfile.ZIP_DEFLATED)
+    print("*** Creating zip archive in", zipName, "with sources", sources, "...")
 
     for source in sources:
         for root, dirs, files in os.walk(source):
@@ -81,13 +81,13 @@ def invokeCMake(sourceDir, generator, extraParams=None):
 
     print("*** Invoking CMake '%s' ..." % cmakeCmd)
     cmakeProc = subprocess.Popen(cmakeCmd).wait()
-    print("*** CMake generation return code: ", cmakeProc)
+    print("*** CMake generation return code:", cmakeProc)
     return cmakeProc
 
 
 def hgClone(url, target, rev="default"):
     print("*** Cloning from '%s' to '%s' ..." % (url, target))
-    assert(subprocess.Popen(["hg", "clone", url, target, "--rev", rev]).wait() == 0)
+    assert subprocess.Popen(["hg", "clone", url, target, "--rev", rev]).wait() == 0
 
 
 def getHgRevision(repoDir, length=6):
