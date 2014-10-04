@@ -51,7 +51,7 @@ class SDKBuilder:
     __metaclass__ = ABCMeta
 
     def __init__(self, args, sdkName):
-        print("*** Builder for", sdkName, "| Current date: ", time.strftime("%c"))
+        print("*** Builder for", sdkName, "| Current time: ", time.strftime("%c"))
 
         self.sdkName = sdkName
         self.args = args
@@ -73,7 +73,7 @@ class SDKBuilder:
     def build(self):
         currentRevision = build_utils.getHgRevision(self.srcDir)
         if self.config.get(self.getLatestRevisionKey()) == currentRevision and not self.args.force_build:
-            print("*** Skipping build, already built revision ", currentRevision)
+            print("*** Skipping build, already built revision", currentRevision)
             return
 
         old_path = os.getcwd()
@@ -84,7 +84,7 @@ class SDKBuilder:
 
         for compiler, builds in self.builds.iteritems():
             compilerStartTime = time.time()
-            print("\n*** Using '%s' compiler..." % compiler)
+            print("\n*** Using '%s' compiler... | Current time: %s " % (compiler, time.strftime("%c")))
 
             for build in builds:
                 buildDir = os.path.join(self.srcDir, build.buildDir)
@@ -105,7 +105,8 @@ class SDKBuilder:
 
         self.config[self.getLatestRevisionKey()] = currentRevision
         self.saveConfig()
-        print("***", self.sdkName, " total build time:", self.minsUntilNow(depsStartTime), "minutes.")
+        print("***", self.sdkName, "total build time:", self.minsUntilNow(depsStartTime),
+              "minutes. | Current time: ", time.strftime("%c"))
         os.chdir(old_path)
 
     @staticmethod
@@ -156,7 +157,7 @@ class SDKBuilder:
             with open(self.args.config_file, 'r') as f:
                 return json.load(f)
         except:
-            print("*** No config file found at ", self.args.config_file, ". Creating a default one...")
+            print("*** No config file found at", self.args.config_file, ". Creating a default one...")
             with open(self.args.config_file, 'w') as f:
                 json.dump({}, f)
             return {}
