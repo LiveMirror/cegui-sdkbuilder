@@ -27,7 +27,6 @@ import time
 import build_utils
 from sdk_builder import BuildDetails, CMakeArgs, SDKBuilder
 
-#TODO: pack deps also in the cegui SDK
 #TODO: pack boost python in PyCEGUI build
 class CEGUISDK(SDKBuilder):
     def __init__(self, args):
@@ -42,25 +41,26 @@ class CEGUISDK(SDKBuilder):
         artifactDirName = "cegui-sdk-%s-%s" % (friendlyName, self.revision)
 
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
-
-        dirsToGather = ["bin", "lib", "include"]
-
         for build in builds:
             buildDir = os.path.join(self.srcDir, build.buildDir)
             # copy source-level includes to the built ones
             dir_util.copy_tree(os.path.join(self.srcDir, "cegui/include"), os.path.join(buildDir, "include"))
             dir_util.copy_tree(os.path.join(buildDir, "cegui/include"), os.path.join(buildDir, "include"))
 
-            for dir in dirsToGather:
+            for dir in ["bin", "lib", "include"]:
                 dirPath = os.path.join(self.srcDir, build.buildDir, dir)
                 dirGatherPath = os.path.join(depsGatherPath, dir)
 
-                print("*** From ", dirPath, " to", dirGatherPath, "...")
+                print("*** From", dirPath, "to", dirGatherPath, "...")
                 if not os.path.isdir(dirPath):
-                    print("*** ERROR: no ", dir, " directory found, nothing will be generated!")
+                    print("*** ERROR: no", dir, "directory found, nothing will be generated!")
                     return
 
                 dir_util.copy_tree(dirPath, dirGatherPath)
+
+        print("*** Gathering dependencies...")
+        self.__copyFiles(self.getDependenciesPath(compiler), depsGatherPath)
+        self.__copyFiles(os.path.join(self.getDependenciesPath(compiler), 'bin'), os.path.join(depsGatherPath, 'bin'))
 
         os.chdir(self.artifactsUnarchivedPath)
         if compiler == "msvc9":
@@ -74,13 +74,25 @@ class CEGUISDK(SDKBuilder):
 
         print("*** Done gathering artifacts for CEGUI.")
 
+    @staticmethod
+    def __copyFiles(src, dst):
+        for item in os.listdir(src):
+            src_path = os.path.join(src, item)
+            if os.path.isdir(src_path):
+                continue
+
+            shutil.copy2(src_path, os.path.join(dst, item))
+
     def generateCEGUISDKDirName(self, friendlyName, revision):
         return "cegui-sdk-%s-%s_%s-%s" %\
                (friendlyName, time.strftime("%Y%m%d"), revision, build_utils.getHgRevision(self.srcDir))
 
+    def getDependenciesPath(self, compiler):
+        return os.path.join(self.args.dependencies_dir, build_utils.generateCEGUIDependenciesDirName(compiler))
+
     def getDefaultCMakeArgs(self, compiler):
         args = ["-DCMAKE_PREFIX_PATH=" +
-                os.path.join(self.args.dependencies_dir, build_utils.generateCEGUIDependenciesDirName(compiler)),
+                self.getDependenciesPath(compiler),
                 "-DCEGUI_SAMPLES_ENABLED=FALSE",
                 "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
                 "-DCEGUI_BUILD_LUA_MODULE=FALSE",
@@ -107,6 +119,7 @@ class CEGUISDK(SDKBuilder):
                                    ("mingw", "mingw", "build-mingw-" + config,
                                     CMakeArgs("MinGW Makefiles", cmakeArgs),
                                     [build_utils.generateMingwMakeCommand()]))
+
         msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
         for version, friendlyName in msvcCompilers:
             msvc = "msvc" + str(version)
