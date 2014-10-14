@@ -43,7 +43,7 @@ class CEGUIDependenciesSDK(SDKBuilder):
         #TODO: skip STATIC libs
         for build in builds:
             depsPath = os.path.join(self.srcDir, build.buildDir, "dependencies")
-            print("*** From ", depsPath, " to", depsGatherPath, "...")
+            print("*** From", depsPath, "to", depsGatherPath, "...")
             if not os.path.isdir(depsPath):
                 print("*** ERROR: no dependencies directory found, nothing will be generated!")
                 return
@@ -65,15 +65,14 @@ class CEGUIDependenciesSDK(SDKBuilder):
         configs = ["Debug", "RelWithDebInfo"]
         for config in configs:
             builds["mingw"].append(BuildDetails
-                                   ("mingw", "mingw", "build-mingw-" + config,
+                                   ("mingw", build_utils.getCompilerFriendlyName("mingw"), "build-mingw-" + config,
                                     CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config] + extraCMakeArgs),
                                     [build_utils.generateMingwMakeCommand()]))
 
-        msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
-        for version, friendlyName in msvcCompilers:
+        for version in xrange(9, 12):
             msvc = "msvc" + str(version)
             builds[msvc].append(BuildDetails
-                                (msvc, friendlyName, "build-" + msvc,
+                                (msvc, build_utils.getCompilerFriendlyName(msvc), "build-" + msvc,
                                  CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), extraCMakeArgs),
                                  [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in configs]))
 

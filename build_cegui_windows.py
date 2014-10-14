@@ -35,10 +35,10 @@ class CEGUISDK(SDKBuilder):
     def gatherArtifacts(self, compiler, builds):
         print("*** Gathering artifacts of CEGUI for '%s' compiler ..." % compiler)
 
-        friendlyName = builds[0].friendlyName
-        artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (friendlyName, time.strftime("%Y%m%d"), self.revision,
+        compilerFriendlyName = builds[0].friendlyName
+        artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (compilerFriendlyName, time.strftime("%Y%m%d"), self.revision,
                                                            build_utils.getHgRevision(self.srcDir))
-        artifactDirName = "cegui-sdk-%s-%s" % (friendlyName, self.revision)
+        artifactDirName = "cegui-sdk-%s-%s" % (compilerFriendlyName, self.revision)
 
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
         for build in builds:
@@ -59,8 +59,8 @@ class CEGUISDK(SDKBuilder):
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
         print("*** Gathering dependencies...")
-        self.__copyFiles(self.getDependenciesPath(compiler), depsGatherPath)
-        self.__copyFiles(os.path.join(self.getDependenciesPath(compiler), 'bin'), os.path.join(depsGatherPath, 'bin'))
+        self.__copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
+        self.__copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
 
         os.chdir(self.artifactsUnarchivedPath)
         if compiler == "msvc9":
@@ -90,9 +90,9 @@ class CEGUISDK(SDKBuilder):
     def getDependenciesPath(self, compiler):
         return os.path.join(self.args.dependencies_dir, build_utils.generateCEGUIDependenciesDirName(compiler))
 
-    def getDefaultCMakeArgs(self, compiler):
+    def getDefaultCMakeArgs(self, compilerFriendlyName):
         args = ["-DCMAKE_PREFIX_PATH=" +
-                self.getDependenciesPath(compiler),
+                self.getDependenciesPath(compilerFriendlyName),
                 "-DCEGUI_SAMPLES_ENABLED=FALSE",
                 "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
                 "-DCEGUI_BUILD_LUA_MODULE=FALSE",
@@ -104,7 +104,8 @@ class CEGUISDK(SDKBuilder):
                          "-DBoost_LIBRARY_DIR=" + self.args.boost_library_dir])
             buildPython = True
 
-        args.append("-DCEGUI_BUILD_PYTHON_MODULES=" + ("TRUE" if buildPython and compiler == "msvc2008" else "FALSE"))
+        args.append("-DCEGUI_BUILD_PYTHON_MODULES=" +
+                    ("TRUE" if buildPython and compilerFriendlyName == "msvc2008" else "FALSE"))
 
         return args
 
@@ -136,7 +137,7 @@ if __name__ == "__main__":
     parser = SDKBuilder.getDefaultArgParse("cegui")
     parser.add_argument("--dependencies-dir", default=os.path.join(currentPath, "artifacts", "unarchived"),
                         help="Directory where to find CEGUI dependencies. The directory needs to contain a subdirectory "
-                             "named '%s', where X is a compiler: mingw, msvc2008, msvc2010 or msvc2012."
+                             "named '%s', where X is a compiler: mingw, msvc2008, msvc2010, msvc2012 or msvc2013."
                              "The CEGUI SDK will be built only for compilers which have their dependencies built." %
                              build_utils.generateCEGUIDependenciesDirName('X'))
     parser.add_argument("--boost-include-dir", default=None,
