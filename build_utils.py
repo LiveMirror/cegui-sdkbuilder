@@ -101,7 +101,8 @@ def generateCEGUIDependenciesDirName(compiler):
 
 
 def generateMSBuildCommand(filename, configuration):
-    return ["msbuild", filename, "/p:Configuration=" + configuration, "/maxcpucount", "/m", "/verbosity:minimal"]
+    return ["msbuild", filename, "/p:Configuration=" + configuration, "/maxcpucount", "/m", "/verbosity:minimal",
+            "/fl", "/flp:logfile=build.log"]
 
 
 def generateMingwMakeCommand(target=None):
