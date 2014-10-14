@@ -67,6 +67,9 @@ class SDKBuilder:
         build_utils.setupPath(self.srcDir, not args.quick_mode)
 
     def cloneRepo(self):
+        if self.args.no_clone:
+            print("Skipping clone...")
+            return
         print("*** Cloning", self.sdkName, "repository...")
         build_utils.hgClone(self.args.url, self.srcDir, self.revision)
 
@@ -142,6 +145,7 @@ class SDKBuilder:
         parser.add_argument("--force-build", "-f", action="store_true",
                             help="Forces building even if the current revision was already built for the specified revision.")
         parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--no-clone", action="store_true", help=argparse.SUPPRESS)
 
         return parser
 
