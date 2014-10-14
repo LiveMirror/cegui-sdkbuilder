@@ -63,7 +63,7 @@ class CEGUISDK(SDKBuilder):
         self.__copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
 
         os.chdir(self.artifactsUnarchivedPath)
-        if compiler == "msvc9":
+        if self.__shouldBuildPyCEGUI(compilerFriendlyName):
             artifactWithPyCEGUIZipName = artifactZipNamePrefix + "-pycegui.zip"
             build_utils.makeZip([artifactDirName], artifactWithPyCEGUIZipName, [".*\\.ilk", "PyCEGUI.*\\.pdb"])
             shutil.move(artifactWithPyCEGUIZipName, os.path.join(self.artifactsPath, artifactWithPyCEGUIZipName))
@@ -98,16 +98,18 @@ class CEGUISDK(SDKBuilder):
                 "-DCEGUI_BUILD_LUA_MODULE=FALSE",
                 "-DCEGUI_BUILD_TESTS=FALSE"]
 
-        buildPython = False
-        if self.args.boost_include_dir is not None and self.args.boost_library_dir is not None:
+        if self.__shouldBuildPyCEGUI(compilerFriendlyName):
             args.extend(["-DBoost_INCLUDE_DIR=" + self.args.boost_include_dir,
                          "-DBoost_LIBRARY_DIR=" + self.args.boost_library_dir])
-            buildPython = True
 
         args.append("-DCEGUI_BUILD_PYTHON_MODULES=" +
-                    ("TRUE" if buildPython and compilerFriendlyName == "msvc2008" else "FALSE"))
+                    ("TRUE" if self.__shouldBuildPyCEGUI(compilerFriendlyName) else "FALSE"))
 
         return args
+
+    def __shouldBuildPyCEGUI(self, compilerFriendlyName):
+        return compilerFriendlyName == "msvc2008" and\
+            self.args.boost_include_dir is not None and self.args.boost_library_dir is not None
 
     def createSDKBuilds(self):
         builds = collections.defaultdict(list)
