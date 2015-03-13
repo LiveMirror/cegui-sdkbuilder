@@ -63,6 +63,11 @@ class CEGUISDK(SDKBuilder):
         print("*** Gathering dependencies...")
         self.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
         self.copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
+        dir_util.copy_tree(
+            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'include'), os.path.join(depsGatherPath, 'include'))
+        self.copyFiles(
+            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'lib', 'dynamic'),
+            os.path.join(depsGatherPath, 'lib'))
 
         for extraFile in ["README.md", "COPYING"]:
             shutil.copy2(os.path.join(self.srcDir, extraFile), depsGatherPath)
