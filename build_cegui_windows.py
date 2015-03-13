@@ -59,8 +59,11 @@ class CEGUISDK(SDKBuilder):
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
         print("*** Gathering dependencies...")
-        self.__copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
-        self.__copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
+        self.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
+        self.copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
+
+        for extraFile in ["README.md", "COPYING"]:
+            self.copyFiles(os.path.join(self.srcDir, extraFile), depsGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
         if self.__shouldBuildPyCEGUI(compilerFriendlyName):
@@ -75,7 +78,11 @@ class CEGUISDK(SDKBuilder):
         print("*** Done gathering artifacts for CEGUI.")
 
     @staticmethod
-    def __copyFiles(src, dst):
+    def copyFiles(src, dst):
+        if not os.path.isdir(src):
+            shutil.copy(src, dst)
+            return
+
         for item in os.listdir(src):
             src_path = os.path.join(src, item)
             if os.path.isdir(src_path):
