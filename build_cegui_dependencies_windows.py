@@ -50,6 +50,8 @@ class CEGUIDependenciesSDK(SDKBuilder):
 
             dir_util.copy_tree(depsPath, depsGatherPath)
 
+        shutil.copy(os.path.join(self.srcDir, "README.md"), depsGatherPath)
+
         os.chdir(self.artifactsUnarchivedPath)
         patternsToIgnore = [".*\\.ilk", ".*" + re.escape(os.path.join("lib", "static"))]
         build_utils.makeZip([artifactDirName], artifactZipName, patternsToIgnore)
