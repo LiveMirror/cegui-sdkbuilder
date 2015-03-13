@@ -143,7 +143,7 @@ class SDKBuilder:
         parser.add_argument("--revision", default="v0-8",
                             help="Specifies which revision (branch) should be built.")
         parser.add_argument("--force-build", "-f", action="store_true",
-                            help="Forces building even if the current revision was already built for the specified revision.")
+                            help="Forces building even if the current revision was already built.")
         parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
         parser.add_argument("--no-clone", action="store_true", help=argparse.SUPPRESS)
 
