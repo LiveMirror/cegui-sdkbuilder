@@ -27,6 +27,22 @@ import shutil
 import re
 
 
+def hasExe(name):
+    return spawn.find_executable(name) is not None
+
+
+def ensureCanBuildOnWindows():
+    def ensureHasExe(name):
+        if not hasExe(name):
+            print("No program named '%s' could be found on PATH! Aborting... " % name)
+            exit(1)
+
+    ensureHasExe('msbuild')
+    ensureHasExe('cmake')
+    ensureHasExe('mingw32-make')
+    ensureHasExe('hg')
+
+
 def setupPath(path, cleanExisting=True):
     if cleanExisting and os.path.isdir(path):
         print("*** Cleaning up '%s' ... " % path)
@@ -35,19 +51,6 @@ def setupPath(path, cleanExisting=True):
     if not os.path.exists(path):
         print("*** Creating path '%s' ..." % path)
         os.makedirs(path)
-
-
-def ensureCanBuildOnWindows():
-    def has_exe(name):
-        if spawn.find_executable(name) is None:
-            print("No program named '%s' could be found on PATH! Aborting... " % name)
-            exit(1)
-        return True
-
-    has_exe('msbuild')
-    has_exe('cmake')
-    has_exe('mingw32-make')
-    has_exe('hg')
 
 
 def makeZip(sources, zipName, patternsToIgnore=None):
@@ -87,6 +90,18 @@ def invokeCMake(sourceDir, generator, extraParams=None):
     cmakeProc = subprocess.Popen(cmakeCmd).wait()
     print("*** CMake generation return code:", cmakeProc)
     return cmakeProc
+
+
+def invokeDoxygen(doxygenBuildDir):
+    oldWorkingDirectory = os.getcwd()
+    os.chdir(doxygenBuildDir)
+
+    print("*** Invoking doxygen on folder '%s' ..." % doxygenBuildDir)
+    doxygenCommand = ["doxygen", os.path.join(doxygenBuildDir, "doxyfile")]
+    doxygenProc = subprocess.Popen(doxygenCommand).wait()
+    print("*** Doxygen return code:", doxygenProc)
+
+    os.chdir(oldWorkingDirectory)
 
 
 def hgClone(url, target, rev="default"):

@@ -58,12 +58,14 @@ class CEGUISDK(SDKBuilder):
 
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
+        dir_util.copy_tree(os.path.join(self.getDoxygenBuildDir(builds[0]), "html"), os.path.join(depsGatherPath, "doc"))
+
         print("*** Gathering dependencies...")
         self.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
         self.copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
 
         for extraFile in ["README.md", "COPYING"]:
-            self.copyFiles(os.path.join(self.srcDir, extraFile), depsGatherPath)
+            shutil.copy2(os.path.join(self.srcDir, extraFile), depsGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
         if self.__shouldBuildPyCEGUI(compilerFriendlyName):
@@ -77,18 +79,38 @@ class CEGUISDK(SDKBuilder):
 
         print("*** Done gathering artifacts for CEGUI.")
 
+    def onAfterBuild(self, compiler, builds):
+        self.compileDocumentation(builds[0])
+
     @staticmethod
     def copyFiles(src, dst):
-        if not os.path.isdir(src):
-            shutil.copy(src, dst)
-            return
+        if not os.path.exists(dst):
+            os.mkdir(dst)
 
         for item in os.listdir(src):
-            src_path = os.path.join(src, item)
-            if os.path.isdir(src_path):
+            srcPath = os.path.join(src, item)
+            dstPath = os.path.join(dst, item)
+
+            if os.path.isdir(srcPath):
                 continue
 
-            shutil.copy2(src_path, os.path.join(dst, item))
+            shutil.copy2(srcPath, dstPath)
+
+    def compileDocumentation(self, build):
+        hasDoxygen = build_utils.hasExe('doxygen')
+        hasDot = build_utils.hasExe('dot')
+
+        if not hasDoxygen:
+            print("*** No doxygen executable exists in PATH, will NOT generate documentation!")
+            return
+
+        if not hasDot:
+            print("*** No dot executable exists in PATH, will NOT generate images for documentation!")
+
+        build_utils.invokeDoxygen(self.getDoxygenBuildDir(build))
+
+    def getDoxygenBuildDir(self, build):
+        return os.path.join(self.srcDir, build.buildDir, "doc", "doxygen")
 
     def generateCEGUISDKDirName(self, friendlyName, revision):
         return "cegui-sdk-%s-%s_%s-%s" %\

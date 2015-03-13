@@ -28,7 +28,6 @@ import time
 import build_utils
 
 #TODO: rename compiler to toolchain?
-#TODO: doxygen docs, README, COPYING, AUTHORS, etc
 #TODO: datafiles
 #TODO: samples
 
@@ -104,6 +103,7 @@ class SDKBuilder:
 
                 print("*** Compilation using '%s' took %f minutes." % (compiler, self.minsUntilNow(compilerStartTime)))
 
+            self.onAfterBuild(compiler, builds)
             self.gatherArtifacts(compiler, builds)
 
         self.config[self.getLatestRevisionKey()] = currentRevision
@@ -123,6 +123,9 @@ class SDKBuilder:
     @abc.abstractmethod
     def gatherArtifacts(self, compiler, builds):
         raise NotImplementedError
+
+    def onAfterBuild(self, compiler, builds):
+        pass
 
     @classmethod
     def getDefaultArgParse(cls, sdkName):
