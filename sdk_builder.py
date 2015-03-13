@@ -1,7 +1,7 @@
 ##############################################################################
 #   CEGUI dependencies build script for Windows
 #
-#   Copyright (C) 2014        Timotei Dolean <timotei21@gmail.com>
+#   Copyright (C) 2014-2015   Timotei Dolean <timotei21@gmail.com>
 #                             and contributing authors (see AUTHORS file)
 #
 #   This program is free software: you can redistribute it and/or modify
