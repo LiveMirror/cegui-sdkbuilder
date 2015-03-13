@@ -51,6 +51,13 @@ def ensureCanBuildOnWindows():
 
 
 def makeZip(sources, zipName, patternsToIgnore=None):
+    def shouldIgnorePath(path):
+        for pattern in patternsToIgnore:
+            if re.match(pattern, path):
+                return True
+
+        return False
+
     if not patternsToIgnore:
         patternsToIgnore = []
     zipFile = zipfile.ZipFile(zipName, 'w', zipfile.ZIP_DEFLATED)
@@ -58,15 +65,12 @@ def makeZip(sources, zipName, patternsToIgnore=None):
 
     for source in sources:
         for root, dirs, files in os.walk(source):
-            for _file in files:
-                skip = False
-                for pattern in patternsToIgnore:
-                    if re.match(pattern, _file):
-                        skip = True
-                        break
+            if shouldIgnorePath(root):
+                continue
 
-                if not skip:
-                    zipFile.write(os.path.join(root, _file))
+            for file in files:
+                if not shouldIgnorePath(file):
+                    zipFile.write(os.path.join(root, file))
 
     zipFile.close()
 

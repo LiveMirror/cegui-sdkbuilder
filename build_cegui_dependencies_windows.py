@@ -21,6 +21,7 @@
 from __future__ import print_function
 import collections
 from distutils import dir_util
+import re
 import shutil
 import os
 import time
@@ -40,7 +41,6 @@ class CEGUIDependenciesSDK(SDKBuilder):
             artifactDirName, time.strftime("%Y%m%d"), build_utils.getHgRevision(self.srcDir))
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
-        #TODO: skip STATIC libs
         for build in builds:
             depsPath = os.path.join(self.srcDir, build.buildDir, "dependencies")
             print("*** From", depsPath, "to", depsGatherPath, "...")
@@ -51,7 +51,8 @@ class CEGUIDependenciesSDK(SDKBuilder):
             dir_util.copy_tree(depsPath, depsGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
-        build_utils.makeZip([artifactDirName], artifactZipName, [".*\\.ilk"])
+        patternsToIgnore = [".*\\.ilk", ".*" + re.escape(os.path.join("lib", "static"))]
+        build_utils.makeZip([artifactDirName], artifactZipName, patternsToIgnore)
         shutil.move(artifactZipName, os.path.join(self.artifactsPath, artifactZipName))
 
         print("*** Done gathering artifacts for CEGUI dependencies.")
