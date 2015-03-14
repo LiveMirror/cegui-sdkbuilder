@@ -58,7 +58,15 @@ class CEGUISDK(SDKBuilder):
 
                 dir_util.copy_tree(dirPath, dirGatherPath)
 
-        dir_util.copy_tree(os.path.join(self.getDoxygenBuildDir(builds[0]), "html"), os.path.join(depsGatherPath, "doc"))
+        dir_util.copy_tree(os.path.join(self.srcDir, "datafiles"), os.path.join(depsGatherPath, "datafiles"))
+        os.remove(os.path.join(depsGatherPath, "datafiles", "CMakeLists.txt"))
+        dir_util.copy_tree(
+            os.path.join(self.srcDir, builds[0].buildDir, "datafiles", "samples"),
+            os.path.join(depsGatherPath, "datafiles", "samples"))
+
+        doxygenDocDir = os.path.join(self.getDoxygenBuildDir(builds[0]), "html")
+        if os.path.exists(doxygenDocDir):
+            dir_util.copy_tree(doxygenDocDir, os.path.join(depsGatherPath, "doc"))
 
         print("*** Gathering dependencies...")
         self.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
@@ -127,7 +135,7 @@ class CEGUISDK(SDKBuilder):
     def getDefaultCMakeArgs(self, compilerFriendlyName):
         args = ["-DCMAKE_PREFIX_PATH=" +
                 self.getDependenciesPath(compilerFriendlyName),
-                "-DCEGUI_SAMPLES_ENABLED=FALSE",
+                "-DCEGUI_SAMPLES_ENABLED=TRUE",
                 "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
                 "-DCEGUI_BUILD_LUA_MODULE=FALSE",
                 "-DCEGUI_BUILD_TESTS=FALSE"]

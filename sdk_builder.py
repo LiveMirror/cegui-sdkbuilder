@@ -28,7 +28,6 @@ import time
 import build_utils
 
 #TODO: rename compiler to toolchain?
-#TODO: datafiles
 #TODO: samples
 
 class CMakeArgs:
