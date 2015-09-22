@@ -21,6 +21,7 @@
 from __future__ import print_function
 import collections
 from distutils import dir_util
+from itertools import chain
 import re
 import shutil
 import os
@@ -72,7 +73,7 @@ class CEGUIDependenciesSDK(SDKBuilder):
                                     CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config] + extraCMakeArgs),
                                     [build_utils.generateMingwMakeCommand()]))
 
-        for version in xrange(9, 12):
+        for version in chain(xrange(9, 12), [14]):
             msvc = "msvc" + str(version)
             builds[msvc].append(BuildDetails
                                 (msvc, build_utils.getCompilerFriendlyName(msvc), "build-" + msvc,

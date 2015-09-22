@@ -121,7 +121,7 @@ def getCompilerFriendlyName(compiler):
         "msvc10": "msvc2010",
         "msvc11": "msvc2012",
         "msvc12": "msvc2013",
-        "msvc13": "msvc2014",
+        "msvc14": "msvc2015",
         "mingw": "mingw"
     }
 
