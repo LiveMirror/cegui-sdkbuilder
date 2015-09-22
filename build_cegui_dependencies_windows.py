@@ -63,8 +63,13 @@ class CEGUIDependenciesSDK(SDKBuilder):
     def createSDKBuilds(self):
         builds = collections.defaultdict(list)
         extraCMakeArgs = []
-        for extraLib in ['CORONA', 'DEVIL', 'FREEIMAGE', 'LUA', 'TINYXML', 'XERCES']:
-            extraCMakeArgs.append("-DCEGUI_BUILD_%s=YES" % extraLib)
+        libToCMakeSwitch = lambda libs, val: [(lib, val) for lib in libs]
+
+        enabledLibs = ['CORONA', 'EXPAT', 'FREEIMAGE', 'FREETYPE2', 'GLEW', 'GLFW', 'GLM', 'MINIZIP', 'PCRE', 'SILLY', 'TINYXML', 'XERCES', 'ZLIB']
+        disabledLibs = ['DEVIL', 'EFFECTS11', 'LUA']
+
+        for libBuildMapping in libToCMakeSwitch(enabledLibs, 'YES') + libToCMakeSwitch(disabledLibs, 'NO'):
+            extraCMakeArgs.append("-DCEGUI_BUILD_%s=%s" % libBuildMapping)
 
         configs = ["Debug", "RelWithDebInfo"]
         for config in configs:
