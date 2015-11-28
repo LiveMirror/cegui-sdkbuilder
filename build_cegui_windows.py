@@ -138,7 +138,8 @@ class CEGUISDK(SDKBuilder):
                 "-DCEGUI_SAMPLES_ENABLED=TRUE",
                 "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
                 "-DCEGUI_BUILD_LUA_MODULE=FALSE",
-                "-DCEGUI_BUILD_TESTS=FALSE"]
+                "-DCEGUI_BUILD_TESTS=FALSE",
+                "-DCEGUI_SAMPLE_DATAPATH=\"../datafiles\""]
 
         if self.__shouldBuildPyCEGUI(compilerFriendlyName):
             args.extend(["-DBoost_INCLUDE_DIR=" + self.args.boost_include_dir,
