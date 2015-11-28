@@ -98,7 +98,9 @@ class SDKBuilder:
 
                 for command in build.buildCommands:
                     print("*** Executing compiler command:", command)
-                    subprocess.Popen(command).wait()
+                    returnCode = subprocess.Popen(command).wait()
+                    if returnCode != 0:
+                        print("*** Compilation failed!")
 
                 print("*** Compilation using '%s' took %f minutes." % (compiler, self.minsUntilNow(compilerStartTime)))
 
