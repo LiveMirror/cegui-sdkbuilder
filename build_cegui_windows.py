@@ -25,9 +25,9 @@ import shutil
 import os
 import time
 import build_utils
+from build_utils import doCopy
 from sdk_builder import BuildDetails, CMakeArgs, SDKBuilder
 
-#TODO: pack boost python in PyCEGUI build
 class CEGUISDK(SDKBuilder):
     def __init__(self, args):
         SDKBuilder.__init__(self, args, "cegui")
@@ -39,42 +39,36 @@ class CEGUISDK(SDKBuilder):
         artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (compilerFriendlyName, time.strftime("%Y%m%d"), self.revision,
                                                            build_utils.getHgRevision(self.srcDir))
         artifactDirName = "cegui-sdk-%s-%s" % (compilerFriendlyName, self.revision)
-
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
+
         for build in builds:
             buildDir = os.path.join(self.srcDir, build.buildDir)
-            # copy source-level includes to the built ones
-            dir_util.copy_tree(os.path.join(self.srcDir, "cegui/include"), os.path.join(buildDir, "include"))
-            dir_util.copy_tree(os.path.join(buildDir, "cegui/include"), os.path.join(buildDir, "include"))
 
-            for dir in ["bin", "lib", "include"]:
-                dirPath = os.path.join(self.srcDir, build.buildDir, dir)
-                dirGatherPath = os.path.join(depsGatherPath, dir)
+            # copy source-level includes to the build directory
+            doCopy(os.path.join(buildDir, "cegui/include"), os.path.join(buildDir, "include"))
+            doCopy(os.path.join(self.srcDir, "cegui/include"), os.path.join(buildDir, "include"))
 
-                print("*** From", dirPath, "to", dirGatherPath, "...")
-                if not os.path.isdir(dirPath):
-                    print("*** ERROR: no", dir, "directory found, nothing will be generated!")
-                    return
+            doCopy(os.path.join(buildDir, 'datafiles/samples'), os.path.join(depsGatherPath, 'datafiles/samples'), build_utils.ignoreNonMatchingFiles('samples.xml'))
+            doCopy(os.path.join(buildDir, 'bin'), os.path.join(depsGatherPath, 'bin'), shutil.ignore_patterns('*.ilk'))
+            doCopy(os.path.join(buildDir, 'lib'), os.path.join(depsGatherPath, 'lib'), shutil.ignore_patterns('*.exp'))
+            doCopy(os.path.join(buildDir, 'include'), os.path.join(depsGatherPath, 'include'), build_utils.ignoreNonMatchingFiles('*.h'))
 
-                dir_util.copy_tree(dirPath, dirGatherPath)
+        doCopy(os.path.join(self.srcDir, "datafiles"), os.path.join(depsGatherPath, "datafiles"), shutil.ignore_patterns('CMakeLists.txt'))
 
-        dir_util.copy_tree(os.path.join(self.srcDir, "datafiles"), os.path.join(depsGatherPath, "datafiles"))
-        os.remove(os.path.join(depsGatherPath, "datafiles", "CMakeLists.txt"))
-        dir_util.copy_tree(
-            os.path.join(self.srcDir, builds[0].buildDir, "datafiles", "samples"),
-            os.path.join(depsGatherPath, "datafiles", "samples"))
-
-        doxygenDocDir = os.path.join(self.getDoxygenBuildDir(builds[0]), "html")
+        doxygenDocDir = self.getDoxygenBuildDir(builds[0])
         if os.path.exists(doxygenDocDir):
             dir_util.copy_tree(doxygenDocDir, os.path.join(depsGatherPath, "doc"))
 
         print("*** Gathering dependencies...")
-        self.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
-        self.copyFiles(os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'), os.path.join(depsGatherPath, 'bin'))
-        dir_util.copy_tree(
-            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'include'), os.path.join(depsGatherPath, 'include'))
-        self.copyFiles(
-            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'lib', 'dynamic'),
+        build_utils.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
+        doCopy(
+            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'),
+            os.path.join(depsGatherPath, 'bin'))
+        doCopy(
+            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'include'),
+            os.path.join(depsGatherPath, 'include'))
+        doCopy(
+            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'lib/dynamic'),
             os.path.join(depsGatherPath, 'lib'))
 
         for extraFile in ["README.md", "COPYING"]:
@@ -95,20 +89,6 @@ class CEGUISDK(SDKBuilder):
     def onAfterBuild(self, compiler, builds):
         self.compileDocumentation(builds[0])
 
-    @staticmethod
-    def copyFiles(src, dst):
-        if not os.path.exists(dst):
-            os.mkdir(dst)
-
-        for item in os.listdir(src):
-            srcPath = os.path.join(src, item)
-            dstPath = os.path.join(dst, item)
-
-            if os.path.isdir(srcPath):
-                continue
-
-            shutil.copy2(srcPath, dstPath)
-
     def compileDocumentation(self, build):
         hasDoxygen = build_utils.hasExe('doxygen')
         hasDot = build_utils.hasExe('dot')
@@ -123,7 +103,7 @@ class CEGUISDK(SDKBuilder):
         build_utils.invokeDoxygen(self.getDoxygenBuildDir(build))
 
     def getDoxygenBuildDir(self, build):
-        return os.path.join(self.srcDir, build.buildDir, "doc", "doxygen")
+        return os.path.join(self.srcDir, build.buildDir, "doc", "doxygen", "html")
 
     def generateCEGUISDKDirName(self, friendlyName, revision):
         return "cegui-sdk-%s-%s_%s-%s" %\

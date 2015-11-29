@@ -18,6 +18,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 from __future__ import print_function
+
+import fnmatch
 from distutils import spawn
 import multiprocessing
 import os
@@ -145,3 +147,57 @@ def generateMingwMakeCommand(target=None):
     if target is not None:
         command.append(target)
     return command
+
+
+def doCopy(src, dst, ignore=None):
+    print("*** From", src, "to", dst, "...")
+    if not os.path.isdir(src):
+        print("*** ERROR: no", dir, "directory found as source, nothing will be copied!")
+        return
+
+    copytree(src, dst, ignore)
+
+
+def ignoreNonMatchingFiles(*patterns):
+    def _ignore_patterns(path, names):
+        ignored_names = []
+        for pattern in patterns:
+            ignored_names.extend(set(names).difference(fnmatch.filter(names, pattern)))
+        return set(ignored_names)
+    return _ignore_patterns
+
+
+def copyFiles(src, dst):
+    if not os.path.exists(dst):
+        os.mkdir(dst)
+
+    for item in os.listdir(src):
+        srcPath = os.path.join(src, item)
+        dstPath = os.path.join(dst, item)
+
+        if os.path.isdir(srcPath):
+            continue
+
+        shutil.copy2(srcPath, dstPath)
+
+
+def copytree(src, dst, ignore=None):
+    names = os.listdir(src)
+    if ignore is not None:
+        ignored_names = ignore(src, names)
+    else:
+        ignored_names = set()
+
+    if os.path.isdir(src) and not os.path.isdir(dst):
+        os.makedirs(dst)
+
+    for name in names:
+        srcname = os.path.join(src, name)
+        if not os.path.isdir(srcname) and name in ignored_names:
+            continue
+
+        dstname = os.path.join(dst, name)
+        if os.path.isdir(srcname):
+            copytree(srcname, dstname, ignore)
+        else:
+            shutil.copy2(srcname, dstname)
