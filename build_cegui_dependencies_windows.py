@@ -39,7 +39,7 @@ class CEGUIDependenciesSDK(SDKBuilder):
 
         artifactDirName = build_utils.generateCEGUIDependenciesDirName(builds[0].friendlyName)
         artifactZipName = "%s-%s-%s.zip" % (
-            artifactDirName, time.strftime("%Y%m%d"), build_utils.getHgRevision(self.srcDir))
+            artifactDirName, time.strftime("%Y%m%d"), self.revision)
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
         for build in builds:
@@ -93,16 +93,10 @@ if __name__ == "__main__":
 
     parser = SDKBuilder.getDefaultArgParse("cegui-dependencies")
     parsedArgs = parser.parse_args()
-    # we don't have separate revisions for deps (yet)
-    if parsedArgs.revision != "default":
-        print("*** Overwriting selected revision with 'default' for dependencies ...")
-    parsedArgs.revision = "default"
 
     print("*** Using args: ")
     for key, value in vars(parsedArgs).iteritems():
         print('     ', key, '=', value)
 
     depsSDK = CEGUIDependenciesSDK(parsedArgs)
-    if not parsedArgs.quick_mode:
-        depsSDK.cloneRepo()
     depsSDK.build()

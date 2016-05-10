@@ -53,30 +53,17 @@ class SDKBuilder:
 
         self.sdkName = sdkName
         self.args = args
-        self.srcDir = os.path.join(self.args.temp_dir, sdkName)
+        self.srcDir = args.src_dir
         self.artifactsPath = args.artifacts_dir
         self.artifactsUnarchivedPath = args.artifacts_unarchived_dir
         self.builds = self.createSDKBuilds()
-        self.revision = args.revision
+        self.revision = build_utils.getHgRevision(self.srcDir)
         self.config = self.loadConfig()
 
         build_utils.setupPath(self.artifactsPath, False)
         build_utils.setupPath(self.artifactsUnarchivedPath, False)
-        build_utils.setupPath(self.srcDir, not args.quick_mode)
-
-    def cloneRepo(self):
-        if self.args.no_clone:
-            print("Skipping clone...")
-            return
-        print("*** Cloning", self.sdkName, "repository...")
-        build_utils.hgClone(self.args.url, self.srcDir, self.revision)
 
     def build(self):
-        currentRevision = build_utils.getHgRevision(self.srcDir)
-        if self.config.get(self.getLatestRevisionKey()) == currentRevision and not self.args.force_build:
-            print("*** Skipping build, already built revision", currentRevision)
-            return
-
         old_path = os.getcwd()
         os.chdir(self.srcDir)
 
@@ -107,7 +94,6 @@ class SDKBuilder:
             self.onAfterBuild(compiler, builds)
             self.gatherArtifacts(compiler, builds)
 
-        self.config[self.getLatestRevisionKey()] = currentRevision
         self.saveConfig()
         print("***", self.sdkName, "total build time:", self.minsUntilNow(depsStartTime),
               "minutes. | Current time: ", time.strftime("%c"))
@@ -133,10 +119,12 @@ class SDKBuilder:
         currentPath = os.getcwd()
 
         parser = argparse.ArgumentParser(description="Build " + sdkName + " for Windows.")
+        parser.add_argument("--src-dir", required=True,
+                            help="Path to the " + sdkName + " sources.")
+
         parser.add_argument("--config-file", default=os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json"),
                             help="Path where to store the configuration file for the builder script.")
-        parser.add_argument("--url", default="https://bitbucket.org/cegui/" + sdkName,
-                            help="URL or path to the mercurial " + sdkName + " repository where the.")
+
         parser.add_argument("--temp-dir", default=os.path.join(currentPath, "local-temp"),
                             help="Temporary directory where to store intermediate output.")
         parser.add_argument("--artifacts-dir", default=os.path.join(currentPath, "artifacts"),
@@ -144,21 +132,13 @@ class SDKBuilder:
         parser.add_argument("--artifacts-unarchived-dir",
                             default=os.path.join(currentPath, "artifacts", "unarchived"),
                             help="Directory where to store the final unarchived artifacts")
-        parser.add_argument("--revision", default="v0-8",
-                            help="Specifies which revision (branch) should be built.")
-        parser.add_argument("--force-build", "-f", action="store_true",
-                            help="Forces building even if the current revision was already built.")
-        parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
-        parser.add_argument("--no-clone", action="store_true", help=argparse.SUPPRESS)
 
+        parser.add_argument("--quick-mode", action="store_true", help=argparse.SUPPRESS)
         return parser
 
     def saveConfig(self):
         with open(self.args.config_file, 'w') as f:
             json.dump(self.config, f)
-
-    def getLatestRevisionKey(self):
-        return 'lastBuiltRevision-%s-%s' % (self.revision, self.sdkName)
 
     def loadConfig(self):
         try:

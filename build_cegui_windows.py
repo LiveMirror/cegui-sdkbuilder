@@ -176,6 +176,4 @@ if __name__ == "__main__":
         print('     ', key, '=', value)
 
     ceguiSDK = CEGUISDK(parsedArgs)
-    if not parsedArgs.quick_mode:
-        ceguiSDK.cloneRepo()
     ceguiSDK.build()
