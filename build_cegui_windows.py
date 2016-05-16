@@ -20,6 +20,7 @@
 ##############################################################################
 from __future__ import print_function
 import collections
+import subprocess
 from distutils import dir_util
 import shutil
 import os
@@ -28,6 +29,7 @@ import build_utils
 from build_utils import doCopy
 from sdk_builder import BuildDetails, CMakeArgs, SDKBuilder
 
+
 class CEGUISDK(SDKBuilder):
     def __init__(self, args):
         SDKBuilder.__init__(self, args, "cegui")
@@ -35,10 +37,9 @@ class CEGUISDK(SDKBuilder):
     def gatherArtifacts(self, compiler, builds):
         print("*** Gathering artifacts of CEGUI for '%s' compiler ..." % compiler)
 
-        compilerFriendlyName = builds[0].friendlyName
-        artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (compilerFriendlyName, time.strftime("%Y%m%d"), self.revision,
+        artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (compiler, time.strftime("%Y%m%d"), self.revision,
                                                            build_utils.getHgRevision(self.srcDir))
-        artifactDirName = "cegui-sdk-%s-%s" % (compilerFriendlyName, self.revision)
+        artifactDirName = "cegui-sdk-%s-%s" % (compiler, self.revision)
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
         for build in builds:
@@ -55,27 +56,22 @@ class CEGUISDK(SDKBuilder):
 
         doCopy(os.path.join(self.srcDir, "datafiles"), os.path.join(depsGatherPath, "datafiles"), shutil.ignore_patterns('CMakeLists.txt'))
 
-        doxygenDocDir = self.getDoxygenBuildDir(builds[0])
+        doxygenDocDir = os.path.join(self.getDoxyfileDir(builds[0]), "html")
         if os.path.exists(doxygenDocDir):
             dir_util.copy_tree(doxygenDocDir, os.path.join(depsGatherPath, "doc"))
 
-        print("*** Gathering dependencies...")
-        build_utils.copyFiles(self.getDependenciesPath(compilerFriendlyName), depsGatherPath)
-        doCopy(
-            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'bin'),
-            os.path.join(depsGatherPath, 'bin'))
-        doCopy(
-            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'include'),
-            os.path.join(depsGatherPath, 'include'))
-        doCopy(
-            os.path.join(self.getDependenciesPath(compilerFriendlyName), 'lib/dynamic'),
-            os.path.join(depsGatherPath, 'lib'))
+        print("*** Adding dependencies to the artifact output...")
+        build_utils.copyFiles(self.args.dependencies_dir, depsGatherPath)
+        for src, dst in [("bin", "bin"), ("include", "include"), ("lib/dynamic", "lib")]:
+            doCopy(
+                os.path.join(self.args.dependencies_dir, src),
+                os.path.join(depsGatherPath, dst))
 
         for extraFile in ["README.md", "COPYING"]:
             shutil.copy2(os.path.join(self.srcDir, extraFile), depsGatherPath)
 
         os.chdir(self.artifactsUnarchivedPath)
-        if self.__shouldBuildPyCEGUI(compilerFriendlyName):
+        if self.shouldBuildPyCEGUI(compiler):
             artifactWithPyCEGUIZipName = artifactZipNamePrefix + "-pycegui.zip"
             build_utils.makeZip([artifactDirName], artifactWithPyCEGUIZipName, [".*\\.ilk", "PyCEGUI.*\\.pdb"])
             shutil.move(artifactWithPyCEGUIZipName, os.path.join(self.artifactsPath, artifactWithPyCEGUIZipName))
@@ -100,59 +96,66 @@ class CEGUISDK(SDKBuilder):
         if not hasDot:
             print("*** No dot executable exists in PATH, will NOT generate images for documentation!")
 
-        build_utils.invokeDoxygen(self.getDoxygenBuildDir(build))
+        self.invokeDoxygen(self.getDoxyfileDir(build))
 
-    def getDoxygenBuildDir(self, build):
-        return os.path.join(self.srcDir, build.buildDir, "doc", "doxygen", "html")
+    @staticmethod
+    def invokeDoxygen(doxyfileDir):
+        oldWorkingDirectory = os.getcwd()
+        os.chdir(doxyfileDir)
+
+        print("*** Invoking doxygen on folder '%s' ..." % doxyfileDir)
+        doxygenCommand = ["doxygen", os.path.join(doxyfileDir, "doxyfile")]
+        doxygenProc = subprocess.Popen(doxygenCommand).wait()
+        print("*** Doxygen return code:", doxygenProc)
+
+        os.chdir(oldWorkingDirectory)
+
+    def getDoxyfileDir(self, build):
+        return os.path.join(self.srcDir, build.buildDir, "doc", "doxygen")
 
     def generateCEGUISDKDirName(self, friendlyName, revision):
         return "cegui-sdk-%s-%s_%s-%s" %\
                (friendlyName, time.strftime("%Y%m%d"), revision, build_utils.getHgRevision(self.srcDir))
 
-    def getDependenciesPath(self, compiler):
-        return os.path.join(self.args.dependencies_dir, build_utils.generateCEGUIDependenciesDirName(compiler))
-
-    def getDefaultCMakeArgs(self, compilerFriendlyName):
+    def getDefaultCMakeArgs(self):
         args = ["-DCMAKE_PREFIX_PATH=" +
-                self.getDependenciesPath(compilerFriendlyName),
+                self.args.dependencies_dir,
                 "-DCEGUI_SAMPLES_ENABLED=TRUE",
                 "-DCEGUI_BUILD_LUA_GENERATOR=FALSE",
                 "-DCEGUI_BUILD_LUA_MODULE=FALSE",
                 "-DCEGUI_BUILD_TESTS=FALSE",
                 "-DCEGUI_SAMPLE_DATAPATH=\"../datafiles\""]
 
-        if self.__shouldBuildPyCEGUI(compilerFriendlyName):
+        if self.shouldBuildPyCEGUI(self.toolchain):
             args.extend(["-DBoost_INCLUDE_DIR=" + self.args.boost_include_dir,
                          "-DBoost_LIBRARY_DIR=" + self.args.boost_library_dir])
 
         args.append("-DCEGUI_BUILD_PYTHON_MODULES=" +
-                    ("TRUE" if self.__shouldBuildPyCEGUI(compilerFriendlyName) else "FALSE"))
+                    ("TRUE" if self.shouldBuildPyCEGUI(self.toolchain) else "FALSE"))
 
         return args
 
-    def __shouldBuildPyCEGUI(self, compilerFriendlyName):
-        return compilerFriendlyName == "msvc2008" and\
+    def shouldBuildPyCEGUI(self, compiler):
+        return compiler == "msvc2008" and\
             self.args.boost_include_dir is not None and self.args.boost_library_dir is not None
 
     def createSDKBuilds(self):
         builds = collections.defaultdict(list)
         configs = ["Debug", "RelWithDebInfo"]
+        cmakeGenerator = self.getCMakeGenerator(self.toolchain)
 
-        for config in configs:
-            cmakeArgs = ["-DCMAKE_BUILD_TYPE=" + config]
-            cmakeArgs.extend(self.getDefaultCMakeArgs("mingw"))
-            builds["mingw"].append(BuildDetails
-                                   ("mingw", "mingw", "build-mingw-" + config,
-                                    CMakeArgs("MinGW Makefiles", cmakeArgs),
-                                    [build_utils.generateMingwMakeCommand()]))
-
-        msvcCompilers = [(9, "msvc2008"), (10, "msvc2010"), (11, "msvc2012"), (12, "msvc2013")]
-        for version, friendlyName in msvcCompilers:
-            msvc = "msvc" + str(version)
-            builds[msvc].append(BuildDetails
-                                (msvc, friendlyName, "build-" + msvc,
-                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), self.getDefaultCMakeArgs(friendlyName)),
-                                 [build_utils.generateMSBuildCommand("cegui.sln", config) for config in configs]))
+        if self.toolchain == "mingw":
+            for config in configs:
+                cmakeArgs = ["-DCMAKE_BUILD_TYPE=" + config] + self.getDefaultCMakeArgs()
+                builds["mingw"].append(
+                    BuildDetails("mingw", "build-mingw-" + config,
+                                 CMakeArgs(cmakeGenerator, cmakeArgs),
+                                 [build_utils.generateMingwMakeCommand()]))
+        else:
+            builds[self.toolchain].append(
+                BuildDetails(self.toolchain, "build-" + self.toolchain,
+                             CMakeArgs(cmakeGenerator, self.getDefaultCMakeArgs()),
+                             [build_utils.generateMSBuildCommand("cegui.sln", config) for config in configs]))
         return builds
 
 if __name__ == "__main__":
@@ -160,20 +163,12 @@ if __name__ == "__main__":
     currentPath = os.getcwd()
 
     parser = SDKBuilder.getDefaultArgParse("cegui")
-    parser.add_argument("--dependencies-dir", default=os.path.join(currentPath, "artifacts", "unarchived"),
-                        help="Directory where to find CEGUI dependencies. The directory needs to contain a subdirectory "
-                             "named '%s', where X is a compiler: mingw, msvc2008, msvc2010, msvc2012 or msvc2013."
-                             "The CEGUI SDK will be built only for compilers which have their dependencies built." %
-                             build_utils.generateCEGUIDependenciesDirName('X'))
+    parser.add_argument("-d", "--dependencies-dir", required=True,
+                        help="Directory where to find CEGUI dependencies associated with currently selected toolchain")
     parser.add_argument("--boost-include-dir", default=None,
                         help="Boost include dir")
     parser.add_argument("--boost-library-dir", default=None,
                         help="Boost library dir")
 
-    parsedArgs = parser.parse_args()
-    print("*** Using args: ")
-    for key, value in vars(parsedArgs).iteritems():
-        print('     ', key, '=', value)
-
-    ceguiSDK = CEGUISDK(parsedArgs)
+    ceguiSDK = CEGUISDK(parser.parse_args())
     ceguiSDK.build()

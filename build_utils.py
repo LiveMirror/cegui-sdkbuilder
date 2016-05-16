@@ -96,18 +96,6 @@ def invokeCMake(sourceDir, generator, extraParams=None):
     return cmakeProc
 
 
-def invokeDoxygen(doxygenBuildDir):
-    oldWorkingDirectory = os.getcwd()
-    os.chdir(doxygenBuildDir)
-
-    print("*** Invoking doxygen on folder '%s' ..." % doxygenBuildDir)
-    doxygenCommand = ["doxygen", os.path.join(doxygenBuildDir, "doxyfile")]
-    doxygenProc = subprocess.Popen(doxygenCommand).wait()
-    print("*** Doxygen return code:", doxygenProc)
-
-    os.chdir(oldWorkingDirectory)
-
-
 def getHgRevision(repoDir, length=6):
     p = subprocess.Popen(["hg", "id", "--id", repoDir], stdout=subprocess.PIPE)
     out, err = p.communicate()

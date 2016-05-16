@@ -141,7 +141,7 @@ class SDKBuilder:
 
         parser = argparse.ArgumentParser(description="Build " + sdkName + " for Windows.")
         parser.add_argument("-s", "--src-dir", required=True,
-                            help="Path to the " + sdkName + " sources.")
+                            help="Path to the " + sdkName + " sources")
         parser.add_argument("-t", "--toolchain", required=True,
                             help="The toolchain to be used when generating the SDK",
                             choices=cls.getAvailableToolchains())
@@ -150,7 +150,7 @@ class SDKBuilder:
                             help="Path where to store the configuration file for the builder script.")
 
         parser.add_argument("--temp-dir", default=os.path.join(currentPath, "local-temp"),
-                            help="Temporary directory where to store intermediate output.")
+                            help="Temporary directory where to store intermediate output")
         parser.add_argument("--artifacts-dir", default=os.path.join(currentPath, "artifacts"),
                             help="Directory where to store the final artifacts")
         parser.add_argument("--artifacts-unarchived-dir",
