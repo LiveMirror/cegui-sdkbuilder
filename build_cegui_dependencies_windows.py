@@ -21,7 +21,6 @@
 from __future__ import print_function
 import collections
 from distutils import dir_util
-from itertools import chain
 import re
 import shutil
 import os
@@ -37,7 +36,7 @@ class CEGUIDependenciesSDK(SDKBuilder):
     def gatherArtifacts(self, compiler, builds):
         print("*** Gathering artifacts for CEGUI dependencies for '%s' compiler ..." % compiler)
 
-        artifactDirName = build_utils.generateCEGUIDependenciesDirName(builds[0].friendlyName)
+        artifactDirName = build_utils.generateCEGUIDependenciesDirName(builds[0].compiler)
         artifactZipName = "%s-%s-%s.zip" % (
             artifactDirName, time.strftime("%Y%m%d"), self.revision)
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
@@ -63,40 +62,35 @@ class CEGUIDependenciesSDK(SDKBuilder):
     def createSDKBuilds(self):
         builds = collections.defaultdict(list)
         extraCMakeArgs = []
-        libToCMakeSwitch = lambda libs, val: [(lib, val) for lib in libs]
+
+        def toCMakeSwitchTuples(libs, val):
+            return [(lib, val) for lib in libs]
 
         enabledLibs = ['CORONA', 'EXPAT', 'FREEIMAGE', 'FREETYPE2', 'GLEW', 'GLFW', 'GLM', 'MINIZIP', 'PCRE', 'SILLY', 'TINYXML', 'XERCES', 'ZLIB']
         disabledLibs = ['DEVIL', 'EFFECTS11', 'LUA']
 
-        for libBuildMapping in libToCMakeSwitch(enabledLibs, 'YES') + libToCMakeSwitch(disabledLibs, 'NO'):
+        for libBuildMapping in toCMakeSwitchTuples(enabledLibs, 'YES') + toCMakeSwitchTuples(disabledLibs, 'NO'):
             extraCMakeArgs.append("-DCEGUI_BUILD_%s=%s" % libBuildMapping)
 
         configs = ["Debug", "RelWithDebInfo"]
-        for config in configs:
-            builds["mingw"].append(BuildDetails
-                                   ("mingw", build_utils.getCompilerFriendlyName("mingw"), "build-mingw-" + config,
-                                    CMakeArgs("MinGW Makefiles", ["-DCMAKE_BUILD_TYPE=" + config] + extraCMakeArgs),
-                                    [build_utils.generateMingwMakeCommand()]))
-
-        for version in chain(xrange(9, 12), [14]):
-            msvc = "msvc" + str(version)
-            builds[msvc].append(BuildDetails
-                                (msvc, build_utils.getCompilerFriendlyName(msvc), "build-" + msvc,
-                                 CMakeArgs("Visual Studio " + (str(version) if version > 9 else '9 2008'), extraCMakeArgs),
-                                 [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in configs]))
+        cmakeGenerator = self.getCMakeGenerator(self.toolchain)
+        if self.toolchain == "mingw":
+            for config in configs:
+                builds["mingw"].append(
+                    BuildDetails("mingw", "build-mingw-" + config,
+                                 CMakeArgs(cmakeGenerator, ["-DCMAKE_BUILD_TYPE=" + config] + extraCMakeArgs),
+                                 [build_utils.generateMingwMakeCommand()]))
+        else:
+            builds[self.toolchain].append(
+                BuildDetails(self.toolchain, "build-" + self.toolchain,
+                             CMakeArgs(cmakeGenerator, extraCMakeArgs),
+                             [build_utils.generateMSBuildCommand("CEGUI-DEPS.sln", config) for config in configs]))
 
         return builds
 
 if __name__ == "__main__":
     build_utils.ensureCanBuildOnWindows()
-    currentPath = os.getcwd()
 
     parser = SDKBuilder.getDefaultArgParse("cegui-dependencies")
-    parsedArgs = parser.parse_args()
-
-    print("*** Using args: ")
-    for key, value in vars(parsedArgs).iteritems():
-        print('     ', key, '=', value)
-
-    depsSDK = CEGUIDependenciesSDK(parsedArgs)
+    depsSDK = CEGUIDependenciesSDK(parser.parse_args())
     depsSDK.build()

@@ -117,22 +117,6 @@ def getHgRevision(repoDir, length=6):
     return out.rstrip()[:length]
 
 
-def getCompilerFriendlyName(compiler):
-    friendlyNames = {
-        "msvc9": "msvc2008",
-        "msvc10": "msvc2010",
-        "msvc11": "msvc2012",
-        "msvc12": "msvc2013",
-        "msvc14": "msvc2015",
-        "mingw": "mingw"
-    }
-
-    if compiler in friendlyNames:
-        return friendlyNames[compiler]
-
-    return compiler
-
-
 def generateCEGUIDependenciesDirName(compiler):
     return "cegui-dependencies-" + compiler
 

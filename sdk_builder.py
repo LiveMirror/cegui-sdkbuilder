@@ -37,9 +37,8 @@ class CMakeArgs:
 
 
 class BuildDetails:
-    def __init__(self, compiler, friendlyName, buildDir, cmakeArgs, buildCommands):
+    def __init__(self, compiler, buildDir, cmakeArgs, buildCommands):
         self.compiler = compiler
-        self.friendlyName = friendlyName
         self.buildDir = buildDir
         self.cmakeArgs = cmakeArgs
         self.buildCommands = buildCommands
@@ -47,8 +46,20 @@ class BuildDetails:
 
 class SDKBuilder:
     __metaclass__ = ABCMeta
+    _toolchainToCMakeGeneratorMappings = {
+        "msvc2008": "Visual Studio 9 2008",
+        "msvc2010": "Visual Studio 10 2010",
+        "msvc2012": "Visual Studio 11 2012",
+        "msvc2013": "Visual Studio 12 2013",
+        "msvc2015": "Visual Studio 14 2015",
+        "mingw": "MinGW Makefiles"
+    }
 
     def __init__(self, args, sdkName):
+        print("*** Using args: ")
+        for key, value in vars(args).iteritems():
+            print('     ', key, '=', value)
+
         print("*** Builder for", sdkName, "| Current time: ", time.strftime("%c"))
 
         self.sdkName = sdkName
@@ -56,6 +67,8 @@ class SDKBuilder:
         self.srcDir = args.src_dir
         self.artifactsPath = args.artifacts_dir
         self.artifactsUnarchivedPath = args.artifacts_unarchived_dir
+        self.toolchain = args.toolchain
+
         self.builds = self.createSDKBuilds()
         self.revision = build_utils.getHgRevision(self.srcDir)
         self.config = self.loadConfig()
@@ -115,12 +128,23 @@ class SDKBuilder:
         pass
 
     @classmethod
+    def getAvailableToolchains(cls):
+        return cls._toolchainToCMakeGeneratorMappings.keys()
+
+    @classmethod
+    def getCMakeGenerator(cls, toolchain):
+        return cls._toolchainToCMakeGeneratorMappings[toolchain]
+
+    @classmethod
     def getDefaultArgParse(cls, sdkName):
         currentPath = os.getcwd()
 
         parser = argparse.ArgumentParser(description="Build " + sdkName + " for Windows.")
-        parser.add_argument("--src-dir", required=True,
+        parser.add_argument("-s", "--src-dir", required=True,
                             help="Path to the " + sdkName + " sources.")
+        parser.add_argument("-t", "--toolchain", required=True,
+                            help="The toolchain to be used when generating the SDK",
+                            choices=cls.getAvailableToolchains())
 
         parser.add_argument("--config-file", default=os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json"),
                             help="Path where to store the configuration file for the builder script.")
