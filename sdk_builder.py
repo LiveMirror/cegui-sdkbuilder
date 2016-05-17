@@ -25,6 +25,8 @@ import json
 import os
 import subprocess
 import time
+from distutils import spawn
+
 import build_utils
 
 #TODO: rename compiler to toolchain?
@@ -69,12 +71,33 @@ class SDKBuilder:
         self.artifactsUnarchivedPath = args.artifacts_unarchived_dir
         self.toolchain = args.toolchain
 
+        self.ensureCanBuildSDK()
+
         self.builds = self.createSDKBuilds()
         self.revision = build_utils.getHgRevision(self.srcDir)
         self.config = self.loadConfig()
 
         build_utils.setupPath(self.artifactsPath, False)
         build_utils.setupPath(self.artifactsUnarchivedPath, False)
+
+    @staticmethod
+    def hasExe(name):
+        return spawn.find_executable(name) is not None
+
+    def ensureCanBuildSDK(self):
+        def ensureHasExe(name):
+            if not self.hasExe(name):
+                print("No program named '%s' could be found on PATH! Aborting... " % name)
+                exit(1)
+
+        ensureHasExe('cmake')
+        if self.toolchain == "mingw":
+            ensureHasExe('mingw32-make')
+        else:
+            ensureHasExe('msbuild')
+
+        if not self.hasExe('hg'):
+            print('*** Mercurial was not found on PATH. It will not be able to detect currently built revision')
 
     def build(self):
         old_path = os.getcwd()
@@ -173,3 +196,4 @@ class SDKBuilder:
             with open(self.args.config_file, 'w') as f:
                 json.dump({}, f)
             return {}
+

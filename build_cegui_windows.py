@@ -159,7 +159,6 @@ class CEGUISDK(SDKBuilder):
         return builds
 
 if __name__ == "__main__":
-    build_utils.ensureCanBuildOnWindows()
     currentPath = os.getcwd()
 
     parser = SDKBuilder.getDefaultArgParse("cegui")

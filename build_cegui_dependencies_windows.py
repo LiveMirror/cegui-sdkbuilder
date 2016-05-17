@@ -89,8 +89,6 @@ class CEGUIDependenciesSDK(SDKBuilder):
         return builds
 
 if __name__ == "__main__":
-    build_utils.ensureCanBuildOnWindows()
-
     parser = SDKBuilder.getDefaultArgParse("cegui-dependencies")
     depsSDK = CEGUIDependenciesSDK(parser.parse_args())
     depsSDK.build()

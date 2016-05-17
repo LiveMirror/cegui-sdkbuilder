@@ -29,24 +29,6 @@ import shutil
 import re
 
 
-def hasExe(name):
-    return spawn.find_executable(name) is not None
-
-
-def ensureCanBuildOnWindows():
-    def ensureHasExe(name):
-        if not hasExe(name):
-            print("No program named '%s' could be found on PATH! Aborting... " % name)
-            exit(1)
-
-    ensureHasExe('msbuild')
-    ensureHasExe('cmake')
-    ensureHasExe('mingw32-make')
-
-    if not hasExe('hg'):
-        print('*** Mercurial was not found on PATH. It will not be able to detect currently built revision')
-
-
 def setupPath(path, cleanExisting=True):
     if cleanExisting and os.path.isdir(path):
         print("*** Cleaning up '%s' ... " % path)
