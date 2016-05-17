@@ -86,8 +86,8 @@ class CEGUISDK(SDKBuilder):
         self.compileDocumentation(builds[0])
 
     def compileDocumentation(self, build):
-        hasDoxygen = build_utils.hasExe('doxygen')
-        hasDot = build_utils.hasExe('dot')
+        hasDoxygen = self.hasExe('doxygen')
+        hasDot = self.hasExe('dot')
 
         if not hasDoxygen:
             print("*** No doxygen executable exists in PATH, will NOT generate documentation!")
