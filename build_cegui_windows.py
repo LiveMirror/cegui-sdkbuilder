@@ -24,7 +24,6 @@ import subprocess
 from distutils import dir_util
 import shutil
 import os
-import time
 import build_utils
 from build_utils import doCopy
 from sdk_builder import BuildDetails, CMakeArgs, SDKBuilder
@@ -37,9 +36,8 @@ class CEGUISDK(SDKBuilder):
     def gatherArtifacts(self, compiler, builds):
         print("*** Gathering artifacts of CEGUI for '%s' compiler ..." % compiler)
 
-        artifactZipNamePrefix = "cegui-sdk-%s-%s-%s-%s" % (compiler, time.strftime("%Y%m%d"), self.revision,
-                                                           build_utils.getHgRevision(self.srcDir))
-        artifactDirName = "cegui-sdk-%s-%s" % (compiler, self.revision)
+        artifactZipNamePrefix = "cegui-sdk-%s" % compiler
+        artifactDirName = "cegui-sdk-%s" % compiler
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
         for build in builds:
@@ -112,10 +110,6 @@ class CEGUISDK(SDKBuilder):
 
     def getDoxyfileDir(self, build):
         return os.path.join(self.srcDir, build.buildDir, "doc", "doxygen")
-
-    def generateCEGUISDKDirName(self, friendlyName, revision):
-        return "cegui-sdk-%s-%s_%s-%s" %\
-               (friendlyName, time.strftime("%Y%m%d"), revision, build_utils.getHgRevision(self.srcDir))
 
     def getDefaultCMakeArgs(self):
         args = ["-DCMAKE_PREFIX_PATH=" +

@@ -36,9 +36,8 @@ class CEGUIDependenciesSDK(SDKBuilder):
     def gatherArtifacts(self, compiler, builds):
         print("*** Gathering artifacts for CEGUI dependencies for '%s' compiler ..." % compiler)
 
-        artifactDirName = build_utils.generateCEGUIDependenciesDirName(builds[0].compiler)
-        artifactZipName = "%s-%s-%s.zip" % (
-            artifactDirName, time.strftime("%Y%m%d"), self.revision)
+        artifactDirName = "cegui-dependencies-" + builds[0].compiler
+        artifactZipName = artifactDirName + ".zip"
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
         for build in builds:

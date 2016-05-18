@@ -74,7 +74,6 @@ class SDKBuilder:
         self.ensureCanBuildSDK()
 
         self.builds = self.createSDKBuilds()
-        self.revision = build_utils.getHgRevision(self.srcDir)
         self.config = self.loadConfig()
 
         build_utils.setupPath(self.artifactsPath, False)
@@ -95,9 +94,6 @@ class SDKBuilder:
             ensureHasExe('mingw32-make')
         else:
             ensureHasExe('msbuild')
-
-        if not self.hasExe('hg'):
-            print('*** Mercurial was not found on PATH. It will not be able to detect currently built revision')
 
     def build(self):
         old_path = os.getcwd()

@@ -78,19 +78,6 @@ def invokeCMake(sourceDir, generator, extraParams=None):
     return cmakeProc
 
 
-def getHgRevision(repoDir, length=6):
-    p = subprocess.Popen(["hg", "id", "--id", repoDir], stdout=subprocess.PIPE)
-    out, err = p.communicate()
-    # TODO: we should either use a parameter or just don't do it at all
-    if err is not None:
-        return ''
-    return out.rstrip()[:length]
-
-
-def generateCEGUIDependenciesDirName(compiler):
-    return "cegui-dependencies-" + compiler
-
-
 def generateMSBuildCommand(filename, configuration):
     return ["msbuild", filename, "/p:Configuration=" + configuration, "/maxcpucount", "/m", "/verbosity:minimal",
             "/fl", "/flp:logfile=build%s.log" % configuration]
