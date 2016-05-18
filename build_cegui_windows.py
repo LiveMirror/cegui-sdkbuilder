@@ -37,7 +37,7 @@ class CEGUISDK(SDKBuilder):
         print("*** Gathering artifacts of CEGUI for '%s' compiler ..." % compiler)
 
         artifactZipNamePrefix = "cegui-sdk-%s" % compiler
-        artifactDirName = "cegui-sdk-%s" % compiler
+        artifactDirName = artifactZipNamePrefix
         depsGatherPath = os.path.join(self.artifactsUnarchivedPath, artifactDirName)
 
         for build in builds:

@@ -27,10 +27,17 @@ import subprocess
 import time
 from distutils import spawn
 
+import sys
+
 import build_utils
 
 #TODO: rename compiler to toolchain?
 #TODO: samples
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 
 class CMakeArgs:
     def __init__(self, generator, extraArgs):
@@ -58,6 +65,7 @@ class SDKBuilder:
     }
 
     def __init__(self, args, sdkName):
+        eprint("*** CEGUI SDK Builder ***")
         print("*** Using args: ")
         for key, value in vars(args).iteritems():
             print('     ', key, '=', value)
