@@ -112,14 +112,15 @@ class SDKBuilder:
                 os.chdir(buildDir)
 
                 if build_utils.invokeCMake(self.srcDir, build.cmakeArgs.generator, build.cmakeArgs.extraArgs) != 0:
-                    print("*** Error configuring CMake for", compiler, "skipping ...")
-                    continue
+                    print("*** Error configuring CMake for", compiler)
+                    exit(1)
 
                 for command in build.buildCommands:
                     print("*** Executing compiler command:", command)
                     returnCode = subprocess.Popen(command).wait()
                     if returnCode != 0:
                         print("*** Compilation failed!")
+                        exit(1)
 
                 print("*** Compilation using '%s' took %f minutes." % (compiler, self.minsUntilNow(compilerStartTime)))
 

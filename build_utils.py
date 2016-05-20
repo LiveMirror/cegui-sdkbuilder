@@ -20,7 +20,6 @@
 from __future__ import print_function
 
 import fnmatch
-from distutils import spawn
 import multiprocessing
 import os
 import subprocess
