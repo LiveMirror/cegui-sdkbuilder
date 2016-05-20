@@ -168,8 +168,6 @@ class SDKBuilder:
         parser.add_argument("--config-file", default=os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json"),
                             help="Path where to store the configuration file for the builder script.")
 
-        parser.add_argument("--temp-dir", default=os.path.join(currentPath, "local-temp"),
-                            help="Temporary directory where to store intermediate output")
         parser.add_argument("--artifacts-dir", default=os.path.join(currentPath, "artifacts"),
                             help="Directory where to store the final artifacts")
         parser.add_argument("--artifacts-unarchived-dir",
