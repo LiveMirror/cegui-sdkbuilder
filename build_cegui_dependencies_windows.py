@@ -65,8 +65,14 @@ class CEGUIDependenciesSDK(SDKBuilder):
         def toCMakeSwitchTuples(libs, val):
             return [(lib, val) for lib in libs]
 
-        enabledLibs = ['CORONA', 'EXPAT', 'FREEIMAGE', 'FREETYPE2', 'GLEW', 'GLFW', 'GLM', 'MINIZIP', 'PCRE', 'SILLY', 'TINYXML', 'XERCES', 'ZLIB']
+        enabledLibs = ['MINIZIP', 'TINYXML', 'EXPAT', 'CORONA', 'FREEIMAGE', 'SILLY', 'FREETYPE2', 'GLEW', 'GLFW', 'GLM', 'PCRE', 'ZLIB']
         disabledLibs = ['DEVIL', 'EFFECTS11', 'LUA']
+
+        # Xerces doesn't build right on MinGW 32 (it requires intrin.h which doesn't exist in the default distribution)
+        if self.toolchain == "mingw":
+            disabledLibs.append('XERCES')
+        else:
+            enabledLibs.append('XERCES')
 
         for libBuildMapping in toCMakeSwitchTuples(enabledLibs, 'YES') + toCMakeSwitchTuples(disabledLibs, 'NO'):
             extraCMakeArgs.append("-DCEGUI_BUILD_%s=%s" % libBuildMapping)
