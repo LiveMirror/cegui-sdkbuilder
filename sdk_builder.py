@@ -18,6 +18,8 @@
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##############################################################################
 from __future__ import print_function
+
+import multiprocessing
 from abc import ABCMeta
 import abc
 import argparse
@@ -62,7 +64,8 @@ class SDKBuilder:
         for key, value in vars(args).iteritems():
             print('     ', key, '=', value)
 
-        print("*** Builder for", sdkName, "| Current time: ", time.strftime("%c"))
+        print("*** Builder for", sdkName, "| Current time: ", time.strftime("%c"),
+              "| Available cores: " + str(multiprocessing.cpu_count()))
 
         self.sdkName = sdkName
         self.args = args
